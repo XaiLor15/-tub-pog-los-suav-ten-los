@@ -19,11 +19,11 @@
     </form>
 
     <div class="grid items-start gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
-        <div class="space-y-3 {{ request()->routeIs('news.show') ? 'order-2 lg:order-1' : '' }}">
+        <div class="space-y-3 {{ request()->routeIs('news.show') ? 'order-2 lg:order-1' : '' }}" data-stagger>
             @forelse ($list as $n)
                 @php $thumb = $n->media->first(); @endphp
                 <a href="{{ route('news.show', array_merge(['news' => $n->id], request()->only(['q', 'category', 'drafts', 'page']))) }}"
-                   class="card flex gap-3 p-3 transition hover:border-input {{ $s?->id === $n->id ? 'border-2 !border-primary' : '' }}">
+                   class="card card-hover flex gap-3 p-3 {{ $s?->id === $n->id ? 'border-2 !border-primary' : '' }}">
                     <span class="flex h-[4.5rem] w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2 text-xs text-muted">
                         @if ($thumb && ! $thumb->isVideo())<img src="{{ $thumb->url() }}" alt="" loading="lazy" class="size-full object-cover">@else[ຮູບ]@endif
                     </span>

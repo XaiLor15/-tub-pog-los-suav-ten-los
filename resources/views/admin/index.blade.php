@@ -18,7 +18,7 @@
         <div class="card">
             <form method="GET" class="flex flex-wrap items-center gap-3 border-b border-border p-3">
                 <input type="hidden" name="tab" value="audit">
-                <div class="w-64"><x-select name="action" :options="['' => 'ທຸກການກະທຳ'] + collect($actions)->map(fn ($a) => $a[1].' · '.$a[0])->all()" :selected="request('action')" data-autosubmit aria-label="ການກະທຳ" /></div>
+                <div class="w-64"><x-select name="action" id="filter-action" :options="['' => 'ທຸກການກະທຳ'] + collect($actions)->map(fn ($a) => $a[1].' · '.$a[0])->all()" :selected="request('action')" data-autosubmit aria-label="ການກະທຳ" /></div>
             </form>
             <ul class="px-5">
                 @forelse ($auditPage as $log)
@@ -35,7 +35,7 @@
             @if ($pending->isEmpty())
                 <p class="mt-2 text-sm text-muted">ບໍ່ມີບັນຊີລໍຖ້າອະນຸມັດ</p>
             @else
-                <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-stagger>
                     @foreach ($pending as $u)
                         @php $match = $suggestions[$u->id]->first(); @endphp
                         <div class="card p-4">
@@ -81,7 +81,7 @@
                                     <span class="leading-tight"><span class="block font-semibold">{{ $u->display_name }} @if ($self)<span class="text-xs font-normal text-muted">(ທ່ານ)</span>@endif @if ($u->is_disabled)<x-badge tone="destructive" class="text-xs">ປິດແລ້ວ</x-badge>@endif</span><span class="text-sm text-muted">{{ $u->email }}</span></span></span></td>
                                 <td>
                                     <form method="POST" action="{{ route('admin.role', $u) }}" class="w-36">@csrf @method('PUT')
-                                        <x-select name="role" :options="['member' => 'ສະມາຊິກ', 'admin' => 'ຜູ້ດູແລລະບົບ']" :selected="$u->role" :disabled="$self" data-autosubmit aria-label="Role ຂອງ {{ $u->display_name }}" />
+                                        <x-select name="role" :id="'role-'.$u->id" :options="['member' => 'ສະມາຊິກ', 'admin' => 'ຜູ້ດູແລລະບົບ']" :selected="$u->role" :disabled="$self" data-autosubmit aria-label="Role ຂອງ {{ $u->display_name }}" />
                                     </form>
                                 </td>
                                 <td>

@@ -15,5 +15,6 @@
         pref = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     root.setAttribute('data-theme', pref);
+    try { if (localStorage.getItem('kths.sidebar') === 'collapsed') root.setAttribute('data-sidebar', 'collapsed'); } catch (e) { /* storage blocked */ }
     if (scale) root.setAttribute('data-font-scale', scale);
 })();

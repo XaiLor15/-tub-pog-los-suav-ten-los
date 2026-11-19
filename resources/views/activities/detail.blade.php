@@ -87,7 +87,7 @@
                         <x-badge :tone="$tone" class="justify-self-end">{{ $label }}</x-badge>
                     </div>
                 @empty
-                    <x-empty icon="target" message="ຍັງບໍ່ມີລາຍການບໍລິຈາກສຳລັບກິດຈະກຳນີ້" />
+                    <x-empty icon="hand-coins" message="ຍັງບໍ່ມີລາຍການບໍລິຈາກສຳລັບກິດຈະກຳນີ້" />
                 @endforelse
 
             @elseif ($tab === 'expenses')

@@ -10,10 +10,10 @@
                 <a href="{{ route('members.index', ['view' => 'tree']) }}" class="segment">ແຜນຜັງ</a>
             </div>
             @can('view-private')
-                <a href="{{ route('members.export', request()->only(['q', 'phaj', 'sex', 'status'])) }}" class="btn-outline">{{ icon('download', 'size-4') }} Export CSV</a>
+                <a href="{{ route('members.export', request()->only(['q', 'phaj', 'sex', 'status'])) }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>
             @endcan
             @if ($canWrite)
-                <a href="{{ route('members.index', ['new' => 1]) }}" class="btn-primary">{{ icon('plus', 'size-4') }} ເພີ່ມສະມາຊິກ</a>
+                <a href="{{ route('members.index', ['new' => 1]) }}" class="btn-primary">{{ icon('user-round-plus', 'size-4') }} ເພີ່ມສະມາຊິກ</a>
             @endif
         </x-slot:actions>
     </x-page-header>
@@ -27,8 +27,8 @@
         @foreach (request()->only(['phaj']) as $k => $v)<input type="hidden" name="{{ $k }}" value="{{ $v }}">@endforeach
         <x-chips param="phaj" :options="$genChips" :current="request('phaj', '')" label="ກອງຕາມ Phaj" class="flex-1" />
         <div class="flex gap-2">
-            <div class="w-36"><x-select name="sex" :options="['' => 'ທຸກເພດ', 'male' => 'ຊາຍ', 'female' => 'ຍິງ']" :selected="request('sex')" data-autosubmit aria-label="ເພດ" /></div>
-            <div class="w-40"><x-select name="status" :options="['' => 'ທຸກສະຖານະ', 'alive' => 'ມີຊີວິດ', 'dead' => 'ເສຍຊີວິດແລ້ວ']" :selected="request('status')" data-autosubmit aria-label="ສະຖານະ" /></div>
+            <div class="w-36"><x-select name="sex" id="filter-sex" :options="['' => 'ທຸກເພດ', 'male' => 'ຊາຍ', 'female' => 'ຍິງ']" :selected="request('sex')" data-autosubmit aria-label="ເພດ" /></div>
+            <div class="w-40"><x-select name="status" id="filter-status" :options="['' => 'ທຸກສະຖານະ', 'alive' => 'ມີຊີວິດ', 'dead' => 'ເສຍຊີວິດແລ້ວ']" :selected="request('status')" data-autosubmit aria-label="ສະຖານະ" /></div>
         </div>
     </form>
 

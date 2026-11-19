@@ -22,7 +22,7 @@ function init(root) {
             class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-surface-2 aria-selected:bg-primary-soft">
             <span class="inline-flex size-8 items-center justify-center rounded-full bg-avatar-male text-avatar-male-fg text-sm font-bold">${esc(o.initial)}</span>
             <span class="min-w-0"><span class="block font-semibold">${esc(o.name)}</span><span class="block text-xs text-muted">${esc(o.sub)}</span></span></li>`).join('')
-            : '<li class="px-3 py-3 text-sm text-muted">ບໍ່ພົບ</li>';
+            : '<li class="flex items-center gap-2 px-3 py-3 text-sm text-muted"><svg class="size-4" aria-hidden="true"><use href="#i-search-x"></use></svg> ບໍ່ພົບ</li>';
         list.classList.remove('hidden');
     };
     const load = debounce(async () => {
@@ -31,7 +31,7 @@ function init(root) {
             options = await getJson(`/members/options?q=${encodeURIComponent(input.value)}${sex}`);
             active = -1;
             render();
-        } catch { list.innerHTML = '<li class="px-3 py-3 text-sm text-destructive">ບໍ່ສາມາດເຊື່ອມຕໍ່ເຄືອຂ່າຍໄດ້</li>'; list.classList.remove('hidden'); }
+        } catch { list.innerHTML = '<li class="flex items-center gap-2 px-3 py-3 text-sm text-destructive"><svg class="size-4" aria-hidden="true"><use href="#i-wifi-off"></use></svg> ບໍ່ສາມາດເຊື່ອມຕໍ່ເຄືອຂ່າຍໄດ້</li>'; list.classList.remove('hidden'); }
     }, 300);
     const chips = root.parentElement.querySelector('[data-picker-chips]');
     const choose = (o) => {

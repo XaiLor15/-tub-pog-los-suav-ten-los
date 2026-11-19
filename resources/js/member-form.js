@@ -58,7 +58,7 @@ const renderOptions = () => {
             class="flex items-center gap-3 rounded-lg px-3 py-2 ${o.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-surface-2 aria-selected:bg-primary-soft'}">
             <span class="inline-flex size-8 items-center justify-center rounded-full bg-avatar-male text-avatar-male-fg text-sm font-bold">${esc(o.initial)}</span>
             <span class="min-w-0 flex-1"><span class="block font-semibold">${esc(o.name)}</span><span class="block text-xs text-muted">${esc(o.disabled || o.sub)}</span></span>
-        </li>`).join('') : '<li class="px-3 py-3 text-sm text-muted">ບໍ່ພົບ</li>';
+        </li>`).join('') : '<li class="flex items-center gap-2 px-3 py-3 text-sm text-muted"><svg class="size-4" aria-hidden="true"><use href="#i-search-x"></use></svg> ບໍ່ພົບ</li>';
     list.classList.remove('hidden');
     search.setAttribute('aria-expanded', 'true');
 };
@@ -67,7 +67,7 @@ const loadOptions = debounce(async () => {
         options = await getJson(`/members/options?sex=male&for=${memberId}&q=${encodeURIComponent(search.value.split(' · ')[0])}`);
         active = -1;
         renderOptions();
-    } catch { list.innerHTML = '<li class="px-3 py-3 text-sm text-destructive">ບໍ່ສາມາດເຊື່ອມຕໍ່ເຄືອຂ່າຍໄດ້</li>'; list.classList.remove('hidden'); }
+    } catch { list.innerHTML = '<li class="flex items-center gap-2 px-3 py-3 text-sm text-destructive"><svg class="size-4" aria-hidden="true"><use href="#i-wifi-off"></use></svg> ບໍ່ສາມາດເຊື່ອມຕໍ່ເຄືອຂ່າຍໄດ້</li>'; list.classList.remove('hidden'); }
 }, 300);
 const closeList = () => { list.classList.add('hidden'); search.setAttribute('aria-expanded', 'false'); };
 
@@ -141,8 +141,8 @@ function renderOrder() {
             return `<li class="flex items-center gap-3 bg-primary-soft/60 px-3 py-2">
                 <span class="inline-flex size-6 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">${i + 1}</span>
                 <span class="min-w-0 flex-1"><span class="block font-semibold">${esc(name)} (${memberId ? 'ຄົນນີ້' : 'ຄົນໃໝ່'})</span><span class="block text-xs text-muted">${kind}ຄົນທີ ${i + 1} · ໃຊ້ ↑↓ ເພື່ອປ່ຽນລຳດັບ</span></span>
-                <button type="button" class="icon-btn-sm size-8" data-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="ຂຶ້ນ">↑</button>
-                <button type="button" class="icon-btn-sm size-8" data-move="1" ${i === total - 1 ? 'disabled' : ''} aria-label="ລົງ">↓</button></li>`;
+                <button type="button" class="icon-btn-sm size-8" data-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="ຍ້າຍຂຶ້ນ"><svg class="size-4" aria-hidden="true"><use href="#i-arrow-up"></use></svg></button>
+                <button type="button" class="icon-btn-sm size-8" data-move="1" ${i === total - 1 ? 'disabled' : ''} aria-label="ຍ້າຍລົງ"><svg class="size-4" aria-hidden="true"><use href="#i-arrow-down"></use></svg></button></li>`;
         }
         return `<li class="flex items-center gap-3 px-3 py-2">
             <span class="inline-flex size-6 items-center justify-center rounded-md bg-surface-2 text-xs font-bold">${i + 1}</span>

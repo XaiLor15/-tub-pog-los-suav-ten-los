@@ -13,14 +13,14 @@
     <x-page-header title="ຄະນະນຳຕະກູນ" :description="($termText ? 'ວາລະ '.$termText.' · ' : '').'ຄັດເລືອກໂດຍກອງປະຊຸມໃຫຍ່ຂອງຕະກູນ'">
         <x-slot:actions>
             <button type="button" class="btn-outline" data-print>{{ icon('printer', 'size-4') }} ພິມ</button>
-            @can('view-private')<a href="{{ route('leadership.export') }}" class="btn-outline">{{ icon('download', 'size-4') }} Export CSV</a>@endcan
+            @can('view-private')<a href="{{ route('leadership.export') }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>@endcan
             @if ($canManage)
                 <button type="button" class="btn-primary" data-modal-open="leader-form" data-action="{{ route('leadership.store') }}" data-title="ເພີ່ມຕຳແໜ່ງ">{{ icon('plus', 'size-4') }} ເພີ່ມຕຳແໜ່ງ</button>
             @endif
         </x-slot:actions>
     </x-page-header>
 
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4" data-stagger>
         <x-stat-card label="ຄະນະນຳທັງໝົດ" :value="$leaders->count()" :hint="'ຊາຍ '.$male.' · ຍິງ '.($leaders->count() - $male)" />
         <x-stat-card label="ຄະນະປະຈຳ" :value="$exec->count()" :hint="$exec->take(3)->pluck('position')->implode(' · ') ?: '—'" />
         <x-stat-card label="ຫົວໜ້າຝ່າຍ" :value="$heads->count()" :hint="'ກຳມະການ '.$committee->count().' ທ່ານ'" />

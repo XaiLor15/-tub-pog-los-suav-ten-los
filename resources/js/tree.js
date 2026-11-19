@@ -1,4 +1,5 @@
 import { esc, getJson } from './http';
+import { emptyState, errorState, iconUse, skeletonRows } from './ui-states';
 
 /*
  * Family tree (Phaj rows). Data: GET /members/tree-data (get_family_tree), side panel:
@@ -38,7 +39,7 @@ async function load() {
     try {
         const { nodes: list } = await getJson('/members/tree-data?depth=12');
         if (!list.length) {
-            statusEl.innerHTML = '<div class="text-center"><p class="text-muted">ຍັງບໍ່ມີຂໍ້ມູນແຜນຜັງ</p></div>';
+            statusEl.innerHTML = emptyState('ຍັງບໍ່ມີຂໍ້ມູນແຜນຜັງ', 'users');
             return;
         }
         statusEl.remove();
@@ -52,8 +53,8 @@ async function load() {
         if (!selected || !nodes.has(selected)) selected = roots[0];
         await select(selected, true);
     } catch {
-        statusEl.innerHTML = '<div class="text-center"><p class="text-destructive">ບໍ່ສາມາດເຊື່ອມຕໍ່ເຄືອຂ່າຍໄດ້</p><button type="button" class="btn-outline btn-sm mt-3" id="tree-retry">ລອງໃໝ່</button></div>';
-        document.getElementById('tree-retry')?.addEventListener('click', () => location.reload());
+        statusEl.innerHTML = errorState();
+        statusEl.querySelector('[data-retry]')?.addEventListener('click', () => location.reload());
     }
 }
 
@@ -175,7 +176,7 @@ async function select(id, center = false) {
 }
 
 async function renderPanel(id) {
-    panel.innerHTML = '<div class="space-y-3 p-5"><div class="skeleton h-5 w-2/3"></div><div class="skeleton h-4 w-1/2"></div><div class="skeleton h-24"></div></div>';
+    panel.innerHTML = skeletonRows(4);
     try {
         const d = await getJson(`/members/${id}/lineage`);
         const m = d.member;
@@ -188,7 +189,7 @@ async function renderPanel(id) {
                 <span class="min-w-0"><span class="block text-xs font-semibold text-muted">Phaj ${a.generation} · ${i === 0 ? 'ຕົ້ນຕະກູນ' : esc(a.label.replace(/ຄົນທີ.*/, '').trim() || 'ລູກ')}</span>
                 <button type="button" data-node="${a.id}" class="block text-left text-[1.0625rem] font-bold hover:underline">${esc(a.name)}</button>
                 <span class="block text-sm text-muted">${parent ? esc(a.label) + ' ຂອງ ' + esc(parent.name) + ' · ' : ''}${esc(a.years)}</span>
-                ${parent ? (a.phaj_ok ? `<span class="text-xs font-semibold text-success">✓ Phaj ຕໍ່ເນື່ອງ (${parent.generation} → ${a.generation})</span>` : `<span class="text-xs font-semibold text-destructive">⚠ Phaj ບໍ່ຕໍ່ເນື່ອງ — ກວດຄືນ</span>`) : ''}</span></li>`;
+                ${parent ? (a.phaj_ok ? `<span class="inline-flex items-center gap-1 text-xs font-semibold text-success">${iconUse('circle-check', 'size-3.5')} Phaj ຕໍ່ເນື່ອງ (${parent.generation} → ${a.generation})</span>` : `<span class="inline-flex items-center gap-1 text-xs font-semibold text-destructive">${iconUse('circle-alert', 'size-3.5')} Phaj ບໍ່ຕໍ່ເນື່ອງ — ກວດຄືນ</span>`) : ''}</span></li>`;
         }).join('');
         const kids = d.children.map((c) => `<button type="button" data-node="${c.id}" class="inline-flex items-center gap-2 rounded-full border border-border py-1 pr-3 pl-1 text-sm hover:bg-surface-2">
             <span class="inline-flex size-6 items-center justify-center rounded-full text-xs font-bold ${c.sex === 'female' ? 'bg-avatar-female text-avatar-female-fg' : 'bg-avatar-male text-avatar-male-fg'}">${c.birth_order ?? '·'}</span>${esc(c.name)}</button>`).join('');
@@ -207,7 +208,7 @@ async function renderPanel(id) {
                 </div>
             </div>`;
     } catch {
-        panel.innerHTML = '<div class="p-5 text-center"><p class="text-destructive">ບໍ່ສາມາດເຊື່ອມຕໍ່ເຄືອຂ່າຍໄດ້</p></div>';
+        panel.innerHTML = errorState();
     }
 }
 

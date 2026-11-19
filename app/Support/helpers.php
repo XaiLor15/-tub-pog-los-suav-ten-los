@@ -43,12 +43,13 @@ if (! function_exists('initial')) {
     }
 }
 
-if (! function_exists('icon')) {
-    /** Inline a vendored Lucide SVG (resources/icons) with the given classes. */
-    function icon(string $name, string $class = 'size-5'): HtmlString
+if (! function_exists('icon_svg')) {
+    /** Raw Lucide SVG markup (root size/class stripped), cached per request. */
+    function icon_svg(string $name): string
     {
         static $cache = [];
-        $cache[$name] ??= (function () use ($name) {
+
+        return $cache[$name] ??= (function () use ($name) {
             $file = resource_path('icons/'.basename($name).'.svg');
             if (! is_file($file)) {
                 return '';
@@ -59,10 +60,41 @@ if (! function_exists('icon')) {
 
             return trim(preg_replace('/\s+/', ' ', $svg));
         })();
+    }
+}
 
+if (! function_exists('icon')) {
+    /**
+     * Inline a vendored Lucide icon (resources/icons). Stroke width and motion come from CSS
+     * ([data-icon] in resources/css/components.css), so every icon shares one style.
+     */
+    function icon(string $name, string $class = 'size-5'): HtmlString
+    {
         return new HtmlString(
-            str_replace('<svg ', '<svg aria-hidden="true" focusable="false" class="'.e($class).' shrink-0" ', $cache[$name])
+            str_replace('<svg ', '<svg aria-hidden="true" focusable="false" data-icon="'.e($name).'" class="'.e($class).' shrink-0" ', icon_svg($name))
         );
+    }
+}
+
+if (! function_exists('icon_sprite')) {
+    /**
+     * Hidden <symbol> sprite so JavaScript can render the same icons: <svg><use href="#i-x"/></svg>.
+     *
+     * @param  array<int, string>  $names
+     */
+    function icon_sprite(array $names): HtmlString
+    {
+        $symbols = array_map(function (string $name) {
+            $svg = icon_svg($name);
+            if ($svg === '') {
+                return '';
+            }
+            $inner = preg_replace('/^<svg\b[^>]*>|<\/svg>$/', '', $svg);
+
+            return '<symbol id="i-'.e($name).'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'.$inner.'</symbol>';
+        }, $names);
+
+        return new HtmlString('<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">'.implode('', $symbols).'</svg>');
     }
 }
 
