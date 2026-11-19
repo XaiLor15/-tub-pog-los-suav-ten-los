@@ -35,6 +35,9 @@
 .bar-grow { transform-origin: left center; animation: grow-x 900ms var(--ease-out-soft) both; animation-delay: calc(200ms + var(--i, 0) * 60ms); }
 .bar-rise { transform-origin: bottom center; animation: grow-y 800ms var(--ease-out-soft) both; animation-delay: calc(250ms + var(--i, 0) * 70ms); }
 
+@keyframes donut-draw { from { stroke-dasharray: 0 100; } }
+.donut-draw { animation: donut-draw var(--dur-chart) var(--ease-out-soft) both; animation-delay: calc(250ms + var(--i, 0) * 120ms); }
+
 /* ---------- Dialogs (open via showModal; motion.js plays the close animation) ---------- */
 dialog[open] .dialog-panel { animation: scale-in var(--dur-base) var(--ease-out-soft) both; }
 dialog[open]::backdrop { animation: fade-in var(--dur-base) linear both; }
@@ -75,3 +78,8 @@ dialog[data-closing]::backdrop { animation: fade-out 140ms linear both; }
     ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
     .skeleton { animation: none !important; }
 }
+
+/* Theme switch: circular reveal from the theme control (theme.js); no cross-fade underneath. */
+:root[data-theme-reveal]::view-transition-old(root),
+:root[data-theme-reveal]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root[data-theme-reveal]::view-transition-new(root) { z-index: 1; }

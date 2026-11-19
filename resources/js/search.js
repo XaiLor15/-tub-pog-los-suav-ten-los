@@ -1,6 +1,7 @@
 import { debounce, esc, getJson, store } from './http';
 import { closeDialog } from './motion';
 import { emptyState, errorState, iconUse, skeletonRows } from './ui-states';
+import { toggleTheme } from './theme';
 
 /* CommandSearch — Ctrl/Cmd + K. Groups: members · pages · events · quick commands. */
 const dlg = document.getElementById('search-dialog');
@@ -49,7 +50,7 @@ function go(item) {
     if (!item) return;
     const q = input.value.trim();
     if (q) store.set(RECENT_KEY, [q, ...store.get(RECENT_KEY, []).filter((x) => x !== q)].slice(0, 3));
-    if (item.action === 'theme') { document.querySelector('[data-theme-toggle]')?.click(); closeDialog(dlg); return; }
+    if (item.action === 'theme') { toggleTheme(); closeDialog(dlg); return; }
     window.location.href = item.url;
 }
 
@@ -59,7 +60,7 @@ function render(data, q = '') {
     if (!data) {
         const recent = store.get(RECENT_KEY, []);
         box.innerHTML = recent.length
-            ? `<p class="px-3 pt-2 pb-1 text-xs font-semibold text-muted">ຄົ້ນຫາລ່າສຸດ</p>${recent.map((r) => `<button type="button" class="nav-item w-full" data-recent="${esc(r)}">${esc(r)}</button>`).join('')}`
+            ? `<p class="px-3 pt-2 pb-1 text-xs font-semibold text-muted">ຄົ້ນຫາລ່າສຸດ</p>${recent.map((r) => `<button type="button" class="menu-item" data-recent="${esc(r)}">${esc(r)}</button>`).join('')}`
             : emptyState('ພິມຊື່ສະມາຊິກ (ລາວ ຫຼື ມົ້ງ), ກິດຈະກຳ ຫຼື ໜ້າ', 'search');
         box.querySelectorAll('[data-recent]').forEach((b) => b.addEventListener('click', () => { input.value = b.dataset.recent; search(b.dataset.recent); }));
         return;
