@@ -51,10 +51,38 @@ document.addEventListener('submit', (e) => {
 const drawer = { open() { document.getElementById('sidebar')?.classList.remove('-translate-x-full'); document.getElementById('drawer-backdrop')?.classList.remove('hidden'); },
     close() { document.getElementById('sidebar')?.classList.add('-translate-x-full'); document.getElementById('drawer-backdrop')?.classList.add('hidden'); } };
 
+/* Dropdown menus: one open at a time; close on outside click, item choice or Esc; arrow keys move focus. */
+const menuItems = (menu) => [...menu.querySelectorAll('[role^=menuitem]:not([disabled])')];
+function closeDropdown(menu, { restoreFocus = false } = {}) {
+    if (!menu || menu.classList.contains('hidden')) return;
+    menu.classList.add('hidden');
+    const trigger = document.querySelector(`[data-toggle="${menu.id}"]`);
+    trigger?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) trigger?.focus();
+}
+const closeAllDropdowns = (except = null) => document.querySelectorAll('[data-dropdown]:not(.hidden)').forEach((m) => { if (m !== except) closeDropdown(m); });
+
+document.addEventListener('keydown', (e) => {
+    const menu = document.activeElement?.closest?.('[data-dropdown]') ?? document.querySelector('[data-dropdown]:not(.hidden)');
+    if (!menu || menu.classList.contains('hidden')) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeDropdown(menu, { restoreFocus: true }); return; }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+    const items = menuItems(menu);
+    if (!items.length) return;
+    e.preventDefault();
+    const i = items.indexOf(document.activeElement);
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1
+        : e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
+    items[next].focus();
+});
+
 document.addEventListener('click', (e) => {
+    const menuChoice = e.target.closest('[data-dropdown] [role^=menuitem]');
+    if (menuChoice && menuChoice.tagName !== 'A') setTimeout(() => closeDropdown(menuChoice.closest('[data-dropdown]')), 0);
+
     const t = e.target.closest('[data-modal-open],[data-modal-close],[data-toggle],[data-drawer-open],[data-drawer-close],[data-reveal],[data-dismiss]');
     if (!t) {
-        document.querySelectorAll('[data-dropdown]:not(.hidden)').forEach((el) => { if (!el.parentElement.contains(e.target)) el.classList.add('hidden'); });
+        document.querySelectorAll('[data-dropdown]:not(.hidden)').forEach((el) => { if (!el.parentElement.contains(e.target)) closeDropdown(el); });
         const row = e.target.closest('tr[data-href]');
         if (row && !e.target.closest('a,button,input,select,form,label')) window.location.href = row.dataset.href;
         return;
@@ -66,6 +94,7 @@ document.addEventListener('click', (e) => {
     if (t.hasAttribute('data-modal-close')) closeDialog(t.closest('dialog'));
     if (t.dataset.toggle) {
         const el = document.getElementById(t.dataset.toggle);
+        if (el?.hasAttribute('data-dropdown')) closeAllDropdowns(el);
         el?.classList.toggle('hidden');
         t.setAttribute('aria-expanded', el && !el.classList.contains('hidden') ? 'true' : 'false');
     }
@@ -108,16 +137,6 @@ function prefillDialog(dlg, trigger) {
     form.querySelectorAll('[name=client_request_id]').forEach((el) => { el.value = crypto.randomUUID?.() ?? String(Date.now()) + Math.random(); });
 }
 
-/* ---------- Theme toggle ---------- */
-document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-theme-toggle]');
-    if (!t) return;
-    const root = document.documentElement;
-    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    savePreference({ theme: next });
-});
-
 export function savePreference(prefs) {
     if (isGuest()) {
         if (prefs.theme) try { localStorage.setItem('kths.theme', prefs.theme); } catch { /* blocked */ }
@@ -128,16 +147,9 @@ export function savePreference(prefs) {
     postJson(url, prefs).catch(() => {});
 }
 
-/* Profile appearance segmented controls apply instantly. */
+/* Profile font-scale control applies instantly (theme radios are handled in theme.js). */
 document.addEventListener('change', (e) => {
     const el = e.target;
-    if (el.name === 'pref_theme') {
-        const root = document.documentElement;
-        const v = el.value === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : el.value;
-        root.setAttribute('data-theme', v);
-        root.setAttribute('data-theme-pref', el.value);
-        savePreference({ theme: el.value });
-    }
     if (el.name === 'pref_font_scale') {
         document.documentElement.setAttribute('data-font-scale', el.value);
         savePreference({ font_scale: Number(el.value) });

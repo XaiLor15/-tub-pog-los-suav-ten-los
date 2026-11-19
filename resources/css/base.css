@@ -1,8 +1,16 @@
 @layer base {
-    html { -webkit-text-size-adjust: 100%; }
-    body { @apply bg-background text-foreground antialiased; line-height: 1.6; font-size: 0.9375rem; }
-    h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
-    h2 { font-size: 1.3125rem; font-weight: 700; line-height: 1.35; }
+    html { -webkit-text-size-adjust: 100%; text-rendering: optimizeLegibility; }
+    body {
+        @apply bg-background text-foreground antialiased;
+        line-height: 1.6;
+        font-size: 0.9375rem;
+        /* A faint light behind the top of the page gives depth without competing with content. */
+        background-image: radial-gradient(70rem 22rem at 70% -6rem, var(--app-glow), transparent 70%);
+        background-repeat: no-repeat;
+    }
+    h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.015em; }
+    h2 { font-size: 1.3125rem; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; }
+    h3 { font-weight: 600; line-height: 1.4; }
     :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
     ::selection { background: var(--primary-soft); color: var(--foreground); }
     [x-cloak], [hidden] { display: none !important; }
@@ -18,6 +26,9 @@
     dialog { color: inherit; background: transparent; padding: 0; max-width: none; max-height: none; }
     dialog::backdrop { background: var(--overlay); backdrop-filter: blur(3px); }
     body:has(dialog[open]) { overflow: hidden; }
+
+    /* Theme switch: suppress every transition for the single frame the palette flips. */
+    :root[data-theme-switching] *, :root[data-theme-switching] *::before, :root[data-theme-switching] *::after { transition: none !important; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

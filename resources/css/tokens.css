@@ -1,21 +1,41 @@
 /*
- * Design tokens — "Navy Trust" v2 (Dev Handoff palette + depth, motion and glass tokens).
- * Components use these through Tailwind (bg-primary, shadow-md, ease-out-soft …) — never hex values.
- * Light values on :root, dark values on [data-theme=dark] (theme-init.js resolves "system").
+ * Design tokens — "Navy Trust" v3.
+ *
+ * Every colour in the UI resolves to one of these custom properties; components reach them
+ * through the Tailwind mapping at the bottom (bg-card, text-muted, shadow-lift, rounded-xl …).
+ * Light values live on :root, dark values on [data-theme=dark]; theme-init.js and theme.js
+ * resolve the "system" preference to one of the two before paint and keep it in sync.
+ *
+ * Tiers
+ *   surface   background → card (surface-1) → surface-2 (inset, hover) → surface-3 (pressed, track)
+ *   text      foreground (primary) → muted (secondary, ≥ 4.5:1 on card in both themes)
+ *   border    border (hairline) → input (control outline, stronger)
  */
 :root {
-    /* Colour — Handoff palette */
+    /* Brand */
     --primary: #1F3259;
-    --primary-strong: #2B4A85;          /* gradient partner of --primary (buttons, active rail) */
+    --primary-strong: #2B4A85;
     --primary-foreground: #FFFFFF;
-    --primary-soft: #E8EDF7;
-    --background: #F5F6F8;
+    --primary-soft: #E9EEF8;
+    --brand-navy: #1F3259;              /* fixed brand colour (logo, brand surfaces) — identical in both themes */
+    --brand-navy-strong: #2B4A85;
+    --brand-navy-deep: #152240;
+    --accent-heritage: #E0B25C;          /* gold accent from the family emblem */
+    --accent-heritage-soft: #FBF3E2;
+
+    /* Surfaces */
+    --background: #F4F6F9;
     --card: #FFFFFF;
-    --border: #E3E6EB;
-    --input: #D5D9E0;
-    --foreground: #111827;
-    --muted: #5B6472;
-    --surface-2: #F1F3F6;
+    --surface-2: #F1F4F8;
+    --surface-3: #E6EBF2;
+    --border: #E2E6EC;
+    --input: #CDD4DF;
+
+    /* Text */
+    --foreground: #101828;
+    --muted: #556070;
+
+    /* Status (text colour + tinted background) */
     --success: #157347;
     --success-bg: #E7F5EE;
     --warning: #7A4800;
@@ -24,94 +44,129 @@
     --destructive-bg: #FDECEA;
     --info: #1D5FB0;
     --info-bg: #E8F0FB;
-    --chart-1: #1F3259;
-    --chart-2: #E8833A;
-    --accent-heritage: #E0B25C;
-    --brand-navy: #1F3259;              /* fixed brand colour (auth panel, logo) — same in both themes */
+
+    /* Data visualisation — categorical order validated for CVD + contrast on --card (light). */
+    --chart-1: #3A5FA8;                  /* series 1 · income · male */
+    --chart-2: #E07A2E;                  /* series 2 · expense · female */
+    --chart-grid: #E8ECF1;
+    --chart-track: #EDF1F7;
+
+    /* People */
     --avatar-male-bg: #DCE4F2;
     --avatar-male-fg: #1F3259;
     --avatar-female-bg: #FCE3D0;
     --avatar-female-fg: #8A3B08;
 
-    /* Surfaces & depth */
-    --overlay: rgb(17 24 39 / 0.45);
-    --glass: rgb(255 255 255 / 0.78);
+    /* Sidebar — always navy (brand anchor); text alphas keep ≥ 5:1 on both sidebar backgrounds */
+    --sidebar-bg: #1A2B4F;
+    --sidebar-bg-end: #152240;
+    --sidebar-fg: #FFFFFF;
+    --sidebar-border: rgb(255 255 255 / 0.08);
+
+    /* Overlays & effects */
+    --overlay: rgb(15 23 42 / 0.45);
+    --glass: rgb(255 255 255 / 0.8);
     --shadow-color: 31 50 89;
-    --ring: rgb(31 50 89 / 0.28);
-    --tooltip-bg: #111827;
-    --tooltip-fg: #F9FAFB;
+    --ring: rgb(43 74 133 / 0.3);
+    --tooltip-bg: #101828;
+    --tooltip-fg: #F8FAFC;
+    --app-glow: rgb(43 74 133 / 0.07);   /* soft light behind the page header */
 
     /* Motion */
     --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-soft: cubic-bezier(0.4, 0, 1, 1);
     --dur-fast: 120ms;
     --dur-base: 200ms;
     --dur-slow: 360ms;
+    --dur-chart: 900ms;
 
     /* Icons — one stroke width everywhere */
     --icon-stroke: 1.85;
 
     /* Layout */
-    --sidebar-w: 16rem;
+    --sidebar-w: 16.5rem;
     --sidebar-w-collapsed: 4.75rem;
+    --header-h: 4.25rem;
     color-scheme: light;
 }
 
 :root[data-theme=dark] {
     --primary: #9DB6EC;
     --primary-strong: #BCCDF3;
-    --primary-foreground: #0E1525;
-    --primary-soft: #22305A;
-    --background: #0E1525;
-    --card: #172033;
-    --border: #263247;
-    --input: #33415A;
-    --foreground: #E7EBF2;
-    --muted: #A3ADBD;
-    --surface-2: #1C273C;
+    --primary-foreground: #0B1220;
+    --primary-soft: #1E2B4D;
+    --accent-heritage-soft: #2E2615;
+
+    --background: #0B1220;
+    --card: #121B2D;
+    --surface-2: #172238;
+    --surface-3: #1F2B44;
+    --border: #233049;
+    --input: #34425E;
+
+    --foreground: #E6EAF2;
+    --muted: #A1ABBC;
+
     --success: #5CC995;
-    --success-bg: #12301F;
+    --success-bg: #11301F;
     --warning: #F0B95C;
-    --warning-bg: #352710;
+    --warning-bg: #33260F;
     --destructive: #F28B80;
     --destructive-bg: #3A1714;
     --info: #8CB8F2;
-    --info-bg: #14284A;
-    --chart-1: #9DB6EC;
-    --chart-2: #E8833A;
+    --info-bg: #132848;
+
+    /* Same hues, stepped for the dark surface (validated separately against --card). */
+    --chart-1: #5B82D6;
+    --chart-2: #D9702A;
+    --chart-grid: #1E2A40;
+    --chart-track: #1B2639;
+
     --avatar-male-bg: #2B3D66;
     --avatar-male-fg: #DCE4F2;
     --avatar-female-bg: #5A3420;
     --avatar-female-fg: #FCE3D0;
-    --overlay: rgb(3 7 18 / 0.6);
-    --glass: rgb(23 32 51 / 0.78);
+
+    --sidebar-bg: #0F192D;
+    --sidebar-bg-end: #0C1424;
+    --sidebar-border: #1E2A40;
+
+    --overlay: rgb(2 6 16 / 0.62);
+    --glass: rgb(18 27 45 / 0.78);
     --shadow-color: 0 0 0;
-    --ring: rgb(157 182 236 / 0.35);
-    --tooltip-bg: #E7EBF2;
-    --tooltip-fg: #0E1525;
+    --ring: rgb(157 182 236 / 0.38);
+    --tooltip-bg: #E6EAF2;
+    --tooltip-fg: #0B1220;
+    --app-glow: rgb(91 130 214 / 0.1);
     color-scheme: dark;
 }
 
-/* Font scaling (Profile → 100% / 112% / 125%); everything else is in rem. */
+/* Font scaling (Profile → 100% / 112% / 125%); sizes elsewhere are rem so everything scales. */
 :root[data-font-scale='112'] { font-size: 112%; }
 :root[data-font-scale='125'] { font-size: 125%; }
 
-/* Collapsed desktop sidebar (set before first paint by theme-init.js). */
+/* Collapsed desktop sidebar (restored before first paint by theme-init.js). */
 :root[data-sidebar=collapsed] { --sidebar-w: var(--sidebar-w-collapsed); }
 
 @theme inline {
     --font-sans: 'Noto Sans', 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
+
     --color-primary: var(--primary);
     --color-primary-strong: var(--primary-strong);
     --color-primary-foreground: var(--primary-foreground);
     --color-primary-soft: var(--primary-soft);
+    --color-brand-navy: var(--brand-navy);
+    --color-heritage: var(--accent-heritage);
+    --color-heritage-soft: var(--accent-heritage-soft);
     --color-background: var(--background);
     --color-card: var(--card);
+    --color-surface-2: var(--surface-2);
+    --color-surface-3: var(--surface-3);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-foreground: var(--foreground);
     --color-muted: var(--muted);
-    --color-surface-2: var(--surface-2);
     --color-success: var(--success);
     --color-success-bg: var(--success-bg);
     --color-warning: var(--warning);
@@ -122,20 +177,33 @@
     --color-info-bg: var(--info-bg);
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
-    --color-heritage: var(--accent-heritage);
-    --color-brand-navy: var(--brand-navy);
+    --color-chart-grid: var(--chart-grid);
+    --color-chart-track: var(--chart-track);
     --color-avatar-male: var(--avatar-male-bg);
     --color-avatar-male-fg: var(--avatar-male-fg);
     --color-avatar-female: var(--avatar-female-bg);
     --color-avatar-female-fg: var(--avatar-female-fg);
     --color-glass: var(--glass);
 
-    /* Radius scale: controls 8px, cards 12px, dialogs 16px, badges full */
+    /* Type scale (Lao glyphs need generous line-height; sizes are rem so font scaling applies) */
+    --text-caption: 0.8125rem;
+    --text-caption--line-height: 1.45;
+    --text-section: 1.0625rem;
+    --text-section--line-height: 1.45;
+    --text-kpi: 1.75rem;
+    --text-kpi--line-height: 1.15;
+    --text-display: 2.125rem;
+    --text-display--line-height: 1.1;
+
+    /* Radius scale: controls lg (10px), cards xl (14px), panels & dialogs 2xl (18px), pills full */
     --radius-sm: 0.375rem;
-    --radius: 0.5rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
+    --radius-xl: 0.875rem;
+    --radius-2xl: 1.125rem;
 
     /* Elevation scale */
-    --shadow-soft: 0 1px 2px rgb(var(--shadow-color) / 0.05), 0 4px 16px -8px rgb(var(--shadow-color) / 0.12);
+    --shadow-soft: 0 1px 2px rgb(var(--shadow-color) / 0.04), 0 2px 8px -4px rgb(var(--shadow-color) / 0.1);
     --shadow-lift: 0 2px 4px rgb(var(--shadow-color) / 0.05), 0 14px 32px -12px rgb(var(--shadow-color) / 0.24);
     --shadow-pop: 0 4px 8px rgb(var(--shadow-color) / 0.06), 0 24px 56px -12px rgb(var(--shadow-color) / 0.32);
     --shadow-glow: 0 6px 18px -6px rgb(var(--shadow-color) / 0.45);

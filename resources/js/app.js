@@ -1,6 +1,7 @@
 // Core UI (every page)
 import './motion';
 import './ui';
+import './theme';
 import './tooltip';
 import './sidebar';
 import './search';

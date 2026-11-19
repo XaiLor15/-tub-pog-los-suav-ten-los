@@ -62,7 +62,7 @@
 
 /* Icon personality on a few header controls */
 @layer components {
-    [data-theme-toggle]:hover svg[data-icon] { transform: rotate(-24deg) scale(1.08); }
+    .theme-trigger:hover svg[data-icon] { transform: rotate(-24deg) scale(1.08); }
     #notif-button:hover svg[data-icon] { transform: rotate(10deg) scale(1.08); }
     [data-modal-close]:hover svg[data-icon] { transform: rotate(90deg); }
 }
@@ -121,19 +121,39 @@
 }
 
 /* ---------- Navigation ---------- */
-@utility nav-item {
-    @apply relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[0.9375rem] font-medium text-muted;
+/* Sidebar links sit on the navy sidebar in both themes, so they use the --sidebar-* tokens. */
+@utility side-link {
+    @apply relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[0.9375rem] font-medium;
+    color: rgb(255 255 255 / 0.78);
     transition: background-color var(--dur-base), color var(--dur-base);
     &::before {
-        content: ""; position: absolute; left: -0.75rem; top: 0.5rem; bottom: 0.5rem; width: 3px; border-radius: 0 3px 3px 0;
-        background: linear-gradient(180deg, var(--primary-strong), var(--primary));
+        content: ""; position: absolute; left: -0.75rem; top: 0.55rem; bottom: 0.55rem; width: 3px; border-radius: 0 3px 3px 0;
+        background: var(--accent-heritage);
         transform: scaleY(0); transition: transform var(--dur-slow) var(--ease-spring);
     }
-    &:hover { @apply bg-surface-2 text-foreground; & svg[data-icon] { transform: translateX(2px); } }
-    &:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
-    &[aria-current=page] { @apply bg-primary-soft font-semibold text-foreground; & svg[data-icon] { color: var(--primary); } &::before { transform: scaleY(1); } }
+    & svg[data-icon] { color: rgb(255 255 255 / 0.66); }
+    &:hover { color: #fff; background: rgb(255 255 255 / 0.07); & svg[data-icon] { color: #fff; transform: translateX(2px); } }
+    &:focus-visible { outline: 2px solid var(--accent-heritage); outline-offset: -2px; box-shadow: none; }
+    &[aria-current=page] {
+        @apply font-semibold; color: #fff;
+        background: linear-gradient(90deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.05));
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+        & svg[data-icon] { color: var(--accent-heritage); }
+        &::before { transform: scaleY(1); }
+    }
 }
-@utility nav-group { @apply mt-5 mb-1 px-3 text-[0.75rem] font-semibold tracking-wide text-muted/80 first:mt-1; }
+@utility side-group { @apply mt-4 mb-1 px-3 text-[0.75rem] font-semibold tracking-wide first:mt-1; color: rgb(255 255 255 / 0.58); }
+
+/* Items inside dropdown menus (user menu, theme menu). */
+@utility menu-item {
+    @apply flex min-h-10 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-foreground;
+    transition: background-color var(--dur-fast), color var(--dur-fast);
+    & svg[data-icon] { color: var(--muted); }
+    &:hover, &:focus-visible { @apply bg-surface-2; outline: none; & svg[data-icon] { color: var(--foreground); } }
+    &[aria-checked=true] { @apply font-semibold text-primary; & svg[data-icon] { color: var(--primary); } }
+    & .menu-check { opacity: 0; transform: scale(0.6); transition: opacity var(--dur-fast), transform var(--dur-base) var(--ease-spring); }
+    &[aria-checked=true] .menu-check { opacity: 1; transform: none; }
+}
 
 /* ---------- Tables ---------- */
 @layer components {
@@ -161,8 +181,8 @@
     .surface-brand {
         color: #fff;
         background:
-            radial-gradient(120% 140% at 100% 0%, rgb(224 178 92 / 0.18), transparent 55%),
-            linear-gradient(135deg, #2B4A85 0%, #1F3259 55%, #172644 100%);
+            radial-gradient(120% 140% at 100% 0%, color-mix(in oklab, var(--accent-heritage) 20%, transparent), transparent 55%),
+            linear-gradient(135deg, var(--brand-navy-strong) 0%, var(--brand-navy) 55%, var(--brand-navy-deep) 100%);
     }
 
     /* Stat card icon tile */
@@ -223,9 +243,21 @@
     #page-progress[data-done] { opacity: 0; transform: scaleX(1); transition: transform 200ms ease-out, opacity 300ms 150ms linear; }
 }
 
-/* ---------- App shell: sidebar width + collapse ---------- */
+/* ---------- App shell: navy sidebar, width + collapse ---------- */
 @layer components {
-    #sidebar { width: 16rem; transition: transform var(--dur-slow) var(--ease-out-soft); }
+    #sidebar {
+        width: 16.5rem;
+        color: var(--sidebar-fg);
+        background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-end));
+        border-right: 1px solid var(--sidebar-border);
+        transition: transform var(--dur-slow) var(--ease-out-soft);
+        scrollbar-color: rgb(255 255 255 / 0.22) transparent;
+    }
+    #sidebar .sidebar-divider { border-color: var(--sidebar-border); }
+    #sidebar .user-card { border-color: rgb(255 255 255 / 0.1); background: rgb(255 255 255 / 0.04); transition: background-color var(--dur-base), border-color var(--dur-base); }
+    #sidebar .user-card:hover { background: rgb(255 255 255 / 0.08); border-color: rgb(255 255 255 / 0.18); }
+    #sidebar .user-card[aria-current=page] { border-color: color-mix(in oklab, var(--accent-heritage) 60%, transparent); }
+
     /* Width animates only while the user toggles (sidebar.js sets .sidebar-anim) — not on load or window resize. */
     :root.sidebar-anim #sidebar { transition: transform var(--dur-slow) var(--ease-out-soft), width var(--dur-slow) var(--ease-out-soft); }
     :root.sidebar-anim .app-content { transition: padding-left var(--dur-slow) var(--ease-out-soft); }
@@ -235,14 +267,42 @@
         :root[data-sidebar=collapsed] #sidebar .nav-label,
         :root[data-sidebar=collapsed] #sidebar .brand-text,
         :root[data-sidebar=collapsed] #sidebar .user-text { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
-        :root[data-sidebar=collapsed] #sidebar .nav-group { height: 1px; margin: 0.75rem 0.75rem; padding: 0; overflow: hidden; color: transparent; background: var(--border); }
-        :root[data-sidebar=collapsed] #sidebar .nav-item { justify-content: center; padding-inline: 0; gap: 0; }
+        :root[data-sidebar=collapsed] #sidebar .side-group { height: 1px; margin: 0.75rem 0.75rem; padding: 0; overflow: hidden; color: transparent; background: var(--sidebar-border); }
+        :root[data-sidebar=collapsed] #sidebar .side-link { justify-content: center; padding-inline: 0; gap: 0; }
         :root[data-sidebar=collapsed] #sidebar .nav-badge { position: absolute; top: 4px; right: 6px; padding: 0 5px; font-size: 0.625rem; }
         :root[data-sidebar=collapsed] #sidebar .brand { justify-content: center; padding-inline: 0; }
         :root[data-sidebar=collapsed] #sidebar .user-card { justify-content: center; padding: 0.5rem; }
         :root[data-sidebar=collapsed] #sidebar .collapse-toggle svg { transform: rotate(180deg); }
     }
     #sidebar .nav-label, #sidebar .brand-text, #sidebar .user-text { transition: opacity var(--dur-base) linear; white-space: nowrap; }
+
+    /* Mobile bottom navigation: active item gets a soft pill behind the icon. */
+    .bottom-link { @apply relative flex min-h-15 flex-col items-center justify-center gap-1 text-[0.75rem] font-medium text-muted; transition: color var(--dur-base); }
+    .bottom-link .pill { @apply flex h-7 w-14 items-center justify-center rounded-full; transition: background-color var(--dur-base), transform var(--dur-base) var(--ease-spring); }
+    .bottom-link:hover { @apply text-foreground; }
+    .bottom-link:active .pill { transform: scale(0.92); }
+    .bottom-link[aria-current=page] { @apply font-semibold text-primary; }
+    .bottom-link[aria-current=page] .pill { @apply bg-primary-soft; }
+}
+
+/* ---------- Charts (server-rendered HTML/SVG; see components/chart/*) ---------- */
+@layer components {
+    .chart-grid-line { @apply absolute inset-x-0 border-t border-chart-grid; }
+    .chart-col { @apply relative flex h-full items-end justify-center gap-[2px] outline-none; }
+    .chart-col::before {
+        content: ""; position: absolute; inset: 0 -2px; border-radius: 0.5rem; background: var(--surface-2); opacity: 0;
+        transition: opacity var(--dur-fast) linear;
+    }
+    .chart-col:hover::before, .chart-col:focus-visible::before { opacity: 0.8; }
+    .chart-col:focus-visible { box-shadow: 0 0 0 2px var(--ring); border-radius: 0.5rem; }
+    .chart-bar { position: relative; width: min(1.5rem, 34%); border-radius: 4px 4px 0 0; }
+    .chart-tip {
+        @apply pointer-events-none absolute bottom-full z-10 mb-2 hidden w-max rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-pop;
+    }
+    .chart-col:hover .chart-tip, .chart-col:focus-visible .chart-tip { display: block; animation: slide-up-sm 180ms var(--ease-out-soft) both; }
+    .donut-seg { transition: stroke-width var(--dur-base) var(--ease-out-soft), opacity var(--dur-base); }
+    .donut:hover .donut-seg:not(:hover) { opacity: 0.55; }
+    .donut-seg:hover { stroke-width: 15; }
 }
 
 /* ---------- Family tree canvas ---------- */
