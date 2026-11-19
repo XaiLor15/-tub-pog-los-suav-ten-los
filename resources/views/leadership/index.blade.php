@@ -10,7 +10,7 @@
         'term_start' => $l->term_start?->toDateString(), 'term_end' => $l->term_end?->toDateString()]);
 @endphp
 <x-layouts.app title="ຄະນະນຳ" :crumbs="['ຕະກູນ', 'ຄະນະນຳ']">
-    <x-page-header title="ຄະນະນຳຕະກູນ" :description="($termText ? 'ວາລະ '.$termText.' · ' : '').'ຄັດເລືອກໂດຍກອງປະຊຸມໃຫຍ່ຂອງຕະກູນ'">
+    <x-page-header title="ຄະນະນຳຕະກູນ" icon="award" :description="($termText ? 'ວາລະ '.$termText.' · ' : '').'ຄັດເລືອກໂດຍກອງປະຊຸມໃຫຍ່ຂອງຕະກູນ'">
         <x-slot:actions>
             <button type="button" class="btn-outline" data-print>{{ icon('printer', 'size-4') }} ພິມ</button>
             @can('view-private')<a href="{{ route('leadership.export') }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>@endcan
@@ -21,12 +21,13 @@
     </x-page-header>
 
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4" data-stagger>
-        <x-stat-card label="ຄະນະນຳທັງໝົດ" :value="$leaders->count()" :hint="'ຊາຍ '.$male.' · ຍິງ '.($leaders->count() - $male)" />
-        <x-stat-card label="ຄະນະປະຈຳ" :value="$exec->count()" :hint="$exec->take(3)->pluck('position')->implode(' · ') ?: '—'" />
-        <x-stat-card label="ຫົວໜ້າຝ່າຍ" :value="$heads->count()" :hint="'ກຳມະການ '.$committee->count().' ທ່ານ'" />
-        <div class="card card-pad">
-            <p class="text-sm font-medium text-muted">ໄລຍະວາລະ</p>
-            <p class="mt-1 font-bold">{{ $termStart ? $termStart->format('m/Y').' – '.$termEnd?->format('m/Y') : 'ຍັງບໍ່ກຳນົດ' }}</p>
+        <x-stat-card label="ຄະນະນຳທັງໝົດ" icon="users" :value="$leaders->count()" :hint="'ຊາຍ '.$male.' · ຍິງ '.($leaders->count() - $male)" />
+        <x-stat-card label="ຄະນະປະຈຳ" icon="crown" :value="$exec->count()" :hint="$exec->take(3)->pluck('position')->implode(' · ') ?: '—'" />
+        <x-stat-card label="ຫົວໜ້າຝ່າຍ" icon="shield" :value="$heads->count()" :hint="'ກຳມະການ '.$committee->count().' ທ່ານ'" />
+        <div class="card p-5">
+            <span class="stat-icon size-10 rounded-xl">{{ icon('calendar-clock', 'size-5') }}</span>
+            <p class="mt-3 text-sm font-medium text-muted">ໄລຍະວາລະ</p>
+            <p class="mt-0.5 font-bold">{{ $termStart ? $termStart->format('m/Y').' – '.$termEnd?->format('m/Y') : 'ຍັງບໍ່ກຳນົດ' }}</p>
             @if ($progress !== null)
                 <x-progress :value="$progress" class="mt-3" label="ໄລຍະວາລະທີ່ຜ່ານໄປ" tone="bg-primary" />
                 <p class="mt-1 text-[0.8125rem] text-muted">{{ $remaining }}</p>
@@ -35,27 +36,29 @@
     </div>
 
     <div class="segmented no-print mt-6">
-        <a href="{{ route('leadership.index') }}" class="segment" @if ($view === 'chart') aria-current="page" @endif>ແຜນຜັງການຈັດຕັ້ງ</a>
-        <a href="{{ route('leadership.index', ['view' => 'list']) }}" class="segment" @if ($view === 'list') aria-current="page" @endif>ລາຍຊື່ ແລະ ຈັດລຳດັບ</a>
+        <a href="{{ route('leadership.index') }}" class="segment gap-1.5" @if ($view === 'chart') aria-current="page" @endif>{{ icon('network', 'size-4') }} ແຜນຜັງການຈັດຕັ້ງ</a>
+        <a href="{{ route('leadership.index', ['view' => 'list']) }}" class="segment gap-1.5" @if ($view === 'list') aria-current="page" @endif>{{ icon('list', 'size-4') }} ລາຍຊື່ ແລະ ຈັດລຳດັບ</a>
     </div>
 
     @if ($leaders->isEmpty())
         <div class="card mt-4"><x-empty icon="award" message="ຍັງບໍ່ມີຂໍ້ມູນຄະນະນຳ">@if ($canManage)<button type="button" class="btn-primary btn-sm" data-modal-open="leader-form" data-action="{{ route('leadership.store') }}">ເພີ່ມຕຳແໜ່ງທຳອິດ</button>@endif</x-empty></div>
     @elseif ($view === 'chart')
-        <section class="card card-pad mt-4">
-            <h2 class="mb-4 text-[1.0625rem] font-semibold">ຄະນະປະຈຳ</h2>
+        <x-panel id="exec-h" title="ຄະນະປະຈຳ" icon="crown" class="mt-4">
             @if ($top = $exec->first())
-                <div class="mx-auto max-w-[15rem] rounded-xl border-2 border-primary bg-primary-soft/50 p-5 text-center">
-                    <x-avatar :member="$top->member" :url="$top->photoUrl()" size="xl" class="mx-auto !bg-primary !text-primary-foreground" />
-                    <p class="mt-3 text-xs text-muted">{{ $top->position }}</p>
-                    <p class="text-lg font-bold">{{ $top->member?->name }}</p>
-                    <p class="num text-sm text-muted">{{ $phone($top) ?? '' }}</p>
+                <div class="relative mx-auto max-w-[17rem] overflow-hidden rounded-2xl border border-heritage/50 bg-card text-center shadow-lift">
+                    <div class="hero-band h-16" aria-hidden="true"></div>
+                    <div class="-mt-10 px-5 pb-5">
+                        <span class="hero-avatar inline-flex rounded-full ring-2 ring-heritage ring-offset-2 ring-offset-card"><x-avatar :member="$top->member" :url="$top->photoUrl()" size="xl" /></span>
+                        <p class="mt-3 inline-flex items-center gap-1 rounded-full bg-heritage-soft px-2.5 py-0.5 text-xs font-semibold text-warning">{{ icon('crown', 'size-3.5') }} {{ $top->position }}</p>
+                        <p class="mt-1.5 text-lg font-bold">{{ $top->member?->name }}</p>
+                        <p class="num text-sm text-muted">{{ $phone($top) ?? '' }}</p>
+                    </div>
                 </div>
                 @if ($exec->count() > 1)
-                    <div class="mx-auto h-6 w-px bg-border"></div>
-                    <div class="grid gap-4 border-t border-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="mx-auto h-6 w-px bg-input" aria-hidden="true"></div>
+                    <div class="grid gap-4 border-t border-input pt-6 sm:grid-cols-2 lg:grid-cols-3" data-stagger>
                         @foreach ($exec->skip(1) as $l)
-                            <div class="rounded-xl border border-border p-5 text-center">
+                            <div class="rounded-xl border border-border bg-card p-5 text-center transition-shadow hover:shadow-lift">
                                 <x-avatar :member="$l->member" :url="$l->photoUrl()" size="lg" class="mx-auto" />
                                 <p class="mt-2 text-xs text-muted">{{ $l->position }}</p>
                                 <p class="font-bold">{{ $l->member?->name }}</p>
@@ -67,12 +70,11 @@
             @else
                 <p class="text-sm text-muted">ຍັງບໍ່ມີ</p>
             @endif
-        </section>
-        <section class="card card-pad mt-4">
-            <h2 class="mb-4 text-[1.0625rem] font-semibold">ຫົວໜ້າຝ່າຍ</h2>
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        </x-panel>
+        <x-panel id="heads-h" title="ຫົວໜ້າຝ່າຍ" icon="shield" class="mt-4">
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-stagger>
                 @forelse ($heads as $l)
-                    <div class="flex items-center gap-3 rounded-xl border border-border p-3">
+                    <div class="flex items-center gap-3 rounded-xl border border-border p-3 transition-shadow hover:shadow-soft">
                         <x-avatar :member="$l->member" :url="$l->photoUrl()" size="md" />
                         <span class="min-w-0 leading-tight"><span class="block truncate text-xs text-muted">{{ $l->position }}</span><span class="block font-bold">{{ $l->member?->name }}</span><span class="num block text-xs text-muted">{{ $phone($l) ?? '' }}</span></span>
                     </div>
@@ -80,17 +82,17 @@
                     <p class="text-sm text-muted">ຍັງບໍ່ມີ</p>
                 @endforelse
             </div>
-        </section>
-        <section class="card card-pad mt-4">
-            <div class="mb-4 flex items-center justify-between"><h2 class="text-[1.0625rem] font-semibold">ກຳມະການ</h2><span class="text-sm text-muted">{{ $committee->count() }} ທ່ານ</span></div>
-            <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
+        </x-panel>
+        <x-panel id="committee-h" title="ກຳມະການ" icon="users" class="mt-4">
+            <x-slot:actions><span class="text-sm text-muted">{{ $committee->count() }} ທ່ານ</span></x-slot:actions>
+            <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5" data-stagger>
                 @forelse ($committee as $l)
                     <div class="flex items-center gap-3 rounded-xl bg-surface-2/70 p-3"><x-avatar :member="$l->member" :url="$l->photoUrl()" size="sm" /><span class="truncate font-medium">{{ $l->member?->name }}</span></div>
                 @empty
                     <p class="text-sm text-muted">ຍັງບໍ່ມີ</p>
                 @endforelse
             </div>
-        </section>
+        </x-panel>
     @else
         <div class="card mt-4 overflow-x-auto">
             <table class="data-table">

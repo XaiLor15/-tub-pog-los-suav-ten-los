@@ -47,6 +47,15 @@ document.addEventListener('submit', (e) => {
     }, 0);
 });
 
+/* ---------- Search fields: the clear button empties the field and reapplies the filter ---------- */
+document.addEventListener('click', (e) => {
+    const clear = e.target.closest('[data-clear-search]');
+    if (!clear) return;
+    const input = clear.parentElement.querySelector('input');
+    input.value = '';
+    if (input.form) input.form.requestSubmit(); else input.focus();
+});
+
 /* ---------- Click delegation: modals, dropdowns, drawer, row links, reveal ---------- */
 const drawer = { open() { document.getElementById('sidebar')?.classList.remove('-translate-x-full'); document.getElementById('drawer-backdrop')?.classList.remove('hidden'); },
     close() { document.getElementById('sidebar')?.classList.add('-translate-x-full'); document.getElementById('drawer-backdrop')?.classList.add('hidden'); } };

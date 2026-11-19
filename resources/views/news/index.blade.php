@@ -5,16 +5,16 @@
     $chips = collect([['value' => '', 'label' => 'ທັງໝົດ']])->merge(collect(\App\Support\Lookups::NEWS_CATEGORIES)->map(fn ($c) => ['value' => $c, 'label' => $c]))->all();
 @endphp
 <x-layouts.app title="ຂ່າວສານ" :crumbs="['ໜ້າຫຼັກ', 'ຂ່າວສານ']">
-    <x-page-header title="ຂ່າວສານ" description="ປະກາດ, ເລື່ອງລາວ ແລະ ຮູບພາບຂອງຕະກູນ">
+    <x-page-header title="ຂ່າວສານ" icon="newspaper" description="ປະກາດ, ເລື່ອງລາວ ແລະ ຮູບພາບຂອງຕະກູນ">
         @if ($canManage)<x-slot:actions><a href="{{ route('news.index', ['new' => 1]) }}" class="btn-primary">{{ icon('pencil', 'size-4') }} ຂຽນຂ່າວ</a></x-slot:actions>
         @endif
     </x-page-header>
 
-    <form method="GET" action="{{ route('news.index') }}" class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <input name="q" value="{{ request('q') }}" class="input lg:w-80" placeholder="ຄົ້ນຫາຫົວຂໍ້ ຫຼື Tag" aria-label="ຄົ້ນຫາຂ່າວ">
+    <form method="GET" action="{{ route('news.index') }}" class="card toolbar mb-4">
+        <x-search placeholder="ຄົ້ນຫາຫົວຂໍ້ ຫຼື Tag" label="ຄົ້ນຫາຂ່າວ" class="lg:w-80" />
         <x-chips param="category" :options="$chips" :current="request('category', '')" label="ໝວດຂ່າວ" class="flex-1" />
         @if ($canManage)
-            <a href="{{ route('news.index', $drafts ? [] : ['drafts' => 1]) }}" class="link text-sm">{{ $drafts ? 'ເບິ່ງທຸກຂ່າວ' : 'ສະບັບຮ່າງ ('.$draftCount.')' }}</a>
+            <a href="{{ route('news.index', $drafts ? [] : ['drafts' => 1]) }}" class="btn-ghost btn-sm" @if ($drafts) aria-current="page" @endif>{{ icon($drafts ? 'newspaper' : 'file-text', 'size-4') }} {{ $drafts ? 'ເບິ່ງທຸກຂ່າວ' : 'ສະບັບຮ່າງ ('.$draftCount.')' }}</a>
         @endif
     </form>
 
@@ -23,18 +23,19 @@
             @forelse ($list as $n)
                 @php $thumb = $n->media->first(); @endphp
                 <a href="{{ route('news.show', array_merge(['news' => $n->id], request()->only(['q', 'category', 'drafts', 'page']))) }}"
-                   class="card card-hover flex gap-3 p-3 {{ $s?->id === $n->id ? 'border-2 !border-primary' : '' }}">
-                    <span class="flex h-[4.5rem] w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2 text-xs text-muted">
-                        @if ($thumb && ! $thumb->isVideo())<img src="{{ $thumb->url() }}" alt="" loading="lazy" class="size-full object-cover">@else[ຮູບ]@endif
+                   @if ($s?->id === $n->id) aria-current="true" @endif
+                   class="group card card-hover flex gap-3 p-3 aria-[current]:!border-primary aria-[current]:shadow-[0_0_0_3px_var(--ring)]">
+                    <span class="flex h-[4.5rem] w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary-soft to-surface-2 text-primary/60">
+                        @if ($thumb && ! $thumb->isVideo())<img src="{{ $thumb->url() }}" alt="" loading="lazy" class="size-full object-cover transition-transform duration-500 group-hover:scale-105">@else{{ icon($thumb ? 'circle-play' : 'newspaper', 'size-6') }}@endif
                     </span>
                     <span class="min-w-0">
                         <span class="flex flex-wrap items-center gap-2 text-xs text-muted">
                             <x-badge tone="primary" class="text-xs">{{ $n->category }}</x-badge>{{ $n->published_at ? lao_date($n->published_at) : '' }}
-                            @if ($n->is_pinned)<span class="font-semibold text-warning">· ປັກໝຸດ</span>@endif
+                            @if ($n->is_pinned)<span class="inline-flex items-center gap-0.5 font-semibold text-warning">{{ icon('pin', 'size-3') }}ປັກໝຸດ</span>@endif
                             @if ($n->status === 'draft')<x-badge tone="warning" class="text-xs">ຮ່າງ</x-badge>@endif
                         </span>
-                        <span class="mt-1 line-clamp-2 block font-bold">{{ $n->title }}</span>
-                        <span class="text-xs text-muted">{{ $n->comments_count }} ຄຳເຫັນ</span>
+                        <span class="mt-1 line-clamp-2 block font-bold leading-snug transition-colors group-hover:text-primary">{{ $n->title }}</span>
+                        <span class="mt-0.5 inline-flex items-center gap-1 text-xs text-muted">{{ icon('message-square', 'size-3.5') }}{{ $n->comments_count }} ຄຳເຫັນ</span>
                     </span>
                 </a>
             @empty
@@ -49,21 +50,25 @@
                 @if ($media->isNotEmpty())
                     <div class="relative aspect-video bg-surface-2">
                         <a href="{{ $media->first()->url() }}" data-lightbox="news-{{ $s->id }}" @if ($media->first()->isVideo()) data-video="1" @endif class="block size-full">
-                            @if ($media->first()->isVideo())<span class="flex size-full items-center justify-center text-muted">▶ ວິດີໂອ</span>@else<img src="{{ $media->first()->url() }}" alt="{{ $s->title }}" class="size-full object-cover">@endif
+                            @if ($media->first()->isVideo())<span class="flex size-full flex-col items-center justify-center gap-2 text-muted">{{ icon('circle-play', 'size-10') }}ວິດີໂອ</span>@else<img src="{{ $media->first()->url() }}" alt="{{ $s->title }}" class="size-full object-cover">@endif
                         </a>
                         @foreach ($media->skip(1) as $m)<a href="{{ $m->url() }}" data-lightbox="news-{{ $s->id }}" @if ($m->isVideo()) data-video="1" @endif hidden></a>@endforeach
-                        <span class="absolute right-3 bottom-3 rounded-full bg-black/60 px-2.5 py-0.5 text-xs font-semibold text-white">1 / {{ $media->count() }}</span>
+                        <span class="absolute right-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm">{{ icon('image', 'size-3.5') }} 1 / {{ $media->count() }}</span>
                     </div>
                 @endif
                 <div class="p-5 sm:p-6">
                     <div class="flex flex-wrap items-center gap-2 text-sm text-muted">
                         <x-badge tone="primary">{{ $s->category }}</x-badge>
-                        <span>{{ $s->published_at ? lao_date($s->published_at) : 'ຍັງບໍ່ເຜີຍແຜ່' }}</span>
-                        <span>· ໂດຍ {{ $s->author?->display_name ?? 'ຄະນະນຳຕະກູນ' }}</span>
-                        @if ($s->status === 'draft')<x-badge tone="warning">ສະບັບຮ່າງ</x-badge>@endif
+                        @if ($s->is_pinned)<x-badge tone="warning">{{ icon('pin', 'size-3.5') }} ປັກໝຸດ</x-badge>@endif
+                        @if ($s->status === 'draft')<x-badge tone="warning" dot>ສະບັບຮ່າງ</x-badge>@endif
                     </div>
-                    <h2 class="mt-3 text-[1.625rem] leading-snug">{{ $s->title }}</h2>
-                    <div class="mt-3 text-[0.9375rem] whitespace-pre-line">{{ $s->body }}</div>
+                    <h2 class="mt-3 max-w-prose text-[1.75rem] leading-snug">{{ $s->title }}</h2>
+                    <div class="mt-4 flex items-center gap-3 border-b border-border pb-4">
+                        <x-avatar :name="$s->author?->display_name ?? 'ຄ'" size="sm" class="!bg-primary !text-primary-foreground" />
+                        <span class="text-sm leading-tight"><span class="block font-semibold">{{ $s->author?->display_name ?? 'ຄະນະນຳຕະກູນ' }}</span>
+                            <span class="text-muted">{{ $s->published_at ? lao_date($s->published_at) : 'ຍັງບໍ່ເຜີຍແຜ່' }}</span></span>
+                    </div>
+                    <div class="mt-4 max-w-prose text-[1rem] leading-[1.8] whitespace-pre-line">{{ $s->body }}</div>
                     @if ($s->tags)
                         <div class="mt-4 flex flex-wrap gap-2">@foreach ($s->tags as $t)<a href="{{ route('news.index', ['q' => '#'.$t]) }}" class="rounded-full border border-border px-3 py-0.5 text-sm hover:bg-surface-2">#{{ $t }}</a>@endforeach</div>
                     @endif
@@ -77,7 +82,7 @@
                     </div>
 
                     <section id="comments" class="mt-6 border-t border-border pt-5" aria-label="ຄຳເຫັນ">
-                        <h3 class="font-bold">ຄຳເຫັນ ({{ $s->comments->count() }})</h3>
+                        <h3 class="flex items-center gap-2 font-bold">{{ icon('message-square', 'size-5 text-muted') }} ຄຳເຫັນ <span class="badge bg-surface-2 text-muted">{{ $s->comments->count() }}</span></h3>
                         @if ($s->status === 'published')
                             @can('comments.create')
                                 <form method="POST" action="{{ route('news.comments.store', $s) }}" class="mt-3 flex gap-3" data-busy>
@@ -86,7 +91,7 @@
                                     <div class="flex-1">
                                         <textarea name="body" rows="3" maxlength="2000" required class="textarea @error('body') input-error @enderror" placeholder="ຂຽນຄຳເຫັນ..." aria-label="ຂຽນຄຳເຫັນ">{{ old('body') }}</textarea>
                                         @error('body')<p class="error-text">{{ $message }}</p>@enderror
-                                        <div class="mt-2 flex justify-end"><button class="btn-primary btn-sm">ສົ່ງ</button></div>
+                                        <div class="mt-2 flex justify-end"><button class="btn-primary btn-sm">{{ icon('send', 'size-4') }} ສົ່ງ</button></div>
                                     </div>
                                 </form>
                             @else
@@ -97,7 +102,7 @@
                         @endif
                         <ul class="mt-4 space-y-4">
                             @forelse ($s->comments as $c)
-                                <li class="flex gap-3">
+                                <li class="flex gap-3 rounded-xl p-2 transition-colors hover:bg-surface-2/50">
                                     <x-avatar :name="$c->author?->member?->name ?? $c->author?->display_name" :sex="$c->author?->member?->sex" size="sm" />
                                     <div class="min-w-0 flex-1">
                                         <p class="text-sm"><span class="font-bold">{{ $c->author?->member?->name ?? $c->author?->display_name }}</span> <span class="text-muted">{{ \App\Support\Format::ago($c->created_at) }}{{ $c->updated_at->gt($c->created_at) ? ' · ແກ້ໄຂແລ້ວ' : '' }}</span></p>
@@ -116,7 +121,7 @@
                                     </div>
                                 </li>
                             @empty
-                                <li class="text-sm text-muted">ຍັງບໍ່ມີຄຳເຫັນ</li>
+                                <li class="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted">ຍັງບໍ່ມີຄຳເຫັນ — ເປັນຄົນທຳອິດທີ່ສະແດງຄວາມຄິດເຫັນ</li>
                             @endforelse
                         </ul>
                     </section>

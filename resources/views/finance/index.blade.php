@@ -7,7 +7,7 @@
 @endphp
 <x-layouts.app title="ການເງິນ" :crumbs="['ຄັງເງິນ', 'ການເງິນ']">
     <p class="print-only mb-4 text-sm">ລາຍງານການເງິນ · {{ lao_date($from) }} – {{ lao_date($to) }} · ພິມວັນທີ {{ lao_date(now(), true) }}</p>
-    <x-page-header title="ການເງິນ" description="ລາຍຮັບ-ລາຍຈ່າຍຂອງຕະກູນ · ຄິດໄລ່ຍອດຈາກຖານຂໍ້ມູນ">
+    <x-page-header title="ການເງິນ" icon="wallet" description="ລາຍຮັບ-ລາຍຈ່າຍຂອງຕະກູນ · ຄິດໄລ່ຍອດຈາກຖານຂໍ້ມູນ">
         <x-slot:actions>
             <button type="button" class="btn-outline" data-print>{{ icon('printer', 'size-4') }} ພິມ</button>
             <a href="{{ route('finance.export', $keep) }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>
@@ -21,29 +21,43 @@
         <x-info-banner class="no-print mb-4">ທ່ານເບິ່ງໄດ້ຢ່າງດຽວ — ການບັນທຶກ/ແກ້ໄຂ/ລຶບ ສະເພາະຜູ້ດູແລລະບົບ.</x-info-banner>
     @endunless
 
+    @php
+        $flow = max(1, $range['income'] + $range['expense']);
+        $incomeShare = $range['income'] / $flow * 100;
+    @endphp
     <div class="grid gap-4 md:grid-cols-3" data-stagger>
-        <div class="surface-brand card-hover relative overflow-hidden rounded-xl p-5 shadow-lift">
-            <p class="text-sm text-white/80">ຍອດຄົງເຫຼືອທັງໝົດ</p>
-            <p class="num mt-1 text-[1.875rem] font-bold tracking-tight" data-countup="{{ max(0, $overall['balance']) }}" data-suffix=" ₭">{{ money($overall['balance']) }}</p>
-            <p class="text-[0.8125rem] text-white/70">ອັບເດດ {{ lao_date(now()) }} · ຈາກ v_finance_summary</p>
+        <div class="surface-brand relative overflow-hidden rounded-xl p-5 shadow-lift">
+            <span class="lattice pointer-events-none absolute inset-0 opacity-40" aria-hidden="true"></span>
+            <p class="relative flex items-center gap-2 text-sm text-white/80"><span class="inline-flex size-8 items-center justify-center rounded-lg bg-white/12 text-heritage">{{ icon('wallet', 'size-4') }}</span>ຍອດຄົງເຫຼືອທັງໝົດ</p>
+            <p class="num relative mt-3 text-[1.875rem] leading-tight font-bold tracking-tight" data-countup="{{ max(0, $overall['balance']) }}" data-suffix=" ₭">{{ money($overall['balance']) }}</p>
+            <p class="relative mt-1 text-[0.8125rem] text-white/70">ອັບເດດ {{ lao_date(now()) }} · ລວມທຸກລາຍການ</p>
         </div>
-        <div class="card card-pad card-hover">
-            <p class="flex items-center gap-2 text-sm text-muted"><span class="inline-flex size-7 items-center justify-center rounded-md bg-success-bg text-success">{{ icon('arrow-down-left', 'size-4') }}</span>ລາຍຮັບ (ຊ່ວງທີ່ເລືອກ)</p>
-            <p class="num mt-1 text-2xl font-bold text-success">{{ money($range['income']) }}</p>
-            <p class="text-[0.8125rem] text-muted">ລວມເງິນບໍລິຈາກ {{ money($range['donation']) }}</p>
-        </div>
-        <div class="card card-pad card-hover">
-            <p class="flex items-center gap-2 text-sm text-muted"><span class="inline-flex size-7 items-center justify-center rounded-md bg-destructive-bg text-destructive">{{ icon('arrow-up-right', 'size-4') }}</span>ລາຍຈ່າຍ (ຊ່ວງທີ່ເລືອກ)</p>
-            <p class="num mt-1 text-2xl font-bold text-destructive">{{ money($range['expense']) }}</p>
-            <p class="text-[0.8125rem] text-muted">{{ $range['expense_count'] }} ລາຍການ</p>
-        </div>
+        <x-stat-card label="ລາຍຮັບ (ຊ່ວງທີ່ເລືອກ)" icon="arrow-down-left" tone="success" :value="money($range['income'])" :hint="'ລວມເງິນບໍລິຈາກ '.money($range['donation'])" />
+        <x-stat-card label="ລາຍຈ່າຍ (ຊ່ວງທີ່ເລືອກ)" icon="arrow-up-right" tone="destructive" :value="money($range['expense'])" :hint="$range['expense_count'].' ລາຍການ'" />
     </div>
 
+    @if ($range['income'] || $range['expense'])
+        <section class="card mt-4 p-5" aria-label="ສັດສ່ວນລາຍຮັບ ແລະ ລາຍຈ່າຍ">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span class="font-semibold">ສັດສ່ວນລາຍຮັບ / ລາຍຈ່າຍ <span class="font-normal text-muted">· {{ lao_date($from) }} – {{ lao_date($to) }}</span></span>
+                <span class="text-muted">ຍອດສຸດທິ <b class="num {{ $range['net'] >= 0 ? 'text-success' : 'text-destructive' }}">{{ money($range['net'], true) }}</b></span>
+            </div>
+            <div class="flex h-3 gap-[2px] overflow-hidden rounded-full bg-chart-track" role="img" aria-label="ລາຍຮັບ {{ percent($incomeShare, 0) }}, ລາຍຈ່າຍ {{ percent(100 - $incomeShare, 0) }}">
+                @if ($range['income'])<span class="bar-grow h-full bg-chart-1" style="width: {{ $incomeShare }}%"></span>@endif
+                @if ($range['expense'])<span class="bar-grow h-full flex-1 bg-chart-2"></span>@endif
+            </div>
+            <div class="mt-2.5 flex flex-wrap justify-between gap-2 text-caption text-muted">
+                <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-[3px] bg-chart-1"></span>ລາຍຮັບ <b class="num text-foreground">{{ percent($incomeShare, 0) }}</b></span>
+                <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-[3px] bg-chart-2"></span>ລາຍຈ່າຍ <b class="num text-foreground">{{ percent(100 - $incomeShare, 0) }}</b></span>
+            </div>
+        </section>
+    @endif
+
     <div class="card mt-6 overflow-hidden">
-        <form method="GET" class="no-print flex flex-col gap-3 border-b border-border p-3 lg:flex-row lg:flex-wrap lg:items-center">
+        <form method="GET" class="no-print toolbar border-b border-border lg:flex-wrap">
             <div class="segmented">
                 @foreach (['' => 'ທັງໝົດ', 'income' => 'ລາຍຮັບ', 'expense' => 'ລາຍຈ່າຍ'] as $v => $l)
-                    <a href="{{ route('finance.index', array_merge($keep, ['type' => $v ?: null])) }}" class="segment" @if ($type === $v) aria-current="page" @endif>{{ $l }}</a>
+                    <a href="{{ route('finance.index', array_merge($keep, ['type' => $v ?: null])) }}" class="segment gap-1.5" @if ($type === $v) aria-current="page" @endif>@if ($v){{ icon($v === 'income' ? 'arrow-down-left' : 'arrow-up-right', 'size-4') }}@endif{{ $l }}</a>
                 @endforeach
             </div>
             <input type="hidden" name="type" value="{{ $type }}">
@@ -57,7 +71,7 @@
         </form>
 
         @if ($transactions->isEmpty())
-            <x-empty icon="wallet" message="ບໍ່ມີທຸລະກຳໃນຊ່ວງທີ່ເລືອກ" />
+            <x-empty icon="receipt" message="ບໍ່ມີທຸລະກຳໃນຊ່ວງທີ່ເລືອກ" hint="ລອງປ່ຽນຊ່ວງວັນທີ ຫຼື ຕົວກອງ" />
         @else
             {{-- Mobile: cards --}}
             <ul class="divide-y divide-border md:hidden">
@@ -80,10 +94,13 @@
                         <tr>
                             <td class="num whitespace-nowrap">{{ lao_date($t->date) }}</td>
                             <td>
-                                <span class="font-medium">{{ $t->description }}</span>
-                                @if ($t->isFromDonation())<span class="badge mt-1 flex w-fit bg-info-bg text-xs text-info">{{ icon('lock', 'size-3') }} ມາຈາກການບໍລິຈາກ</span>@endif
+                                <span class="flex items-center gap-3">
+                                    <span @class(['inline-flex size-8 shrink-0 items-center justify-center rounded-lg', 'bg-success-bg text-success' => $t->type === 'income', 'bg-destructive-bg text-destructive' => $t->type !== 'income']) aria-hidden="true">{{ icon($t->type === 'income' ? 'arrow-down-left' : 'arrow-up-right', 'size-4') }}</span>
+                                    <span class="min-w-0"><span class="font-medium">{{ $t->description }}</span>
+                                    @if ($t->isFromDonation())<span class="badge mt-1 flex w-fit bg-info-bg text-xs text-info">{{ icon('lock', 'size-3') }} ມາຈາກການບໍລິຈາກ</span>@endif</span>
+                                </span>
                             </td>
-                            <td class="whitespace-nowrap">{{ $t->category }}</td>
+                            <td class="whitespace-nowrap"><x-badge tone="neutral">{{ $t->category }}</x-badge></td>
                             <td class="hidden whitespace-nowrap md:table-cell">{{ $t->event?->title ?? '—' }}</td>
                             <td class="text-right font-semibold"><x-money :amount="$t->amount" :sign="$t->type === 'expense' ? '-' : '+'" /></td>
                             <td class="no-print text-right">

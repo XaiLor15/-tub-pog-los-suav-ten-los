@@ -8,7 +8,7 @@
 @endphp
 <x-layouts.app title="ຕິດຕາມການບໍລິຈາກ" :crumbs="['ກອງທຶນ', 'ຕິດຕາມການບໍລິຈາກ']">
     <p class="print-only mb-4 text-sm">ລາຍງານການບໍລິຈາກ · {{ $event?->title }} · ພິມວັນທີ {{ lao_date(now(), true) }}</p>
-    <x-page-header title="ຕິດຕາມການບໍລິຈາກ" description="ຍອດຄາດຫວັງ, ຊຳລະແລ້ວ ແລະ ຄ້າງຊຳລະ ຂອງແຕ່ລະຄົນ ຕໍ່ກິດຈະກຳ">
+    <x-page-header title="ຕິດຕາມການບໍລິຈາກ" icon="hand-coins" description="ຍອດຄາດຫວັງ, ຊຳລະແລ້ວ ແລະ ຄ້າງຊຳລະ ຂອງແຕ່ລະຄົນ ຕໍ່ກິດຈະກຳ">
         <x-slot:actions>
             <form method="GET" class="w-64"><x-select name="event" id="filter-event" :options="$events->pluck('title', 'id')->all()" :selected="$event?->id" data-autosubmit aria-label="ເລືອກກິດຈະກຳ" /></form>
             <button type="button" class="btn-outline" data-print>{{ icon('printer', 'size-4') }} ພິມ</button>
@@ -23,12 +23,16 @@
         <div class="card"><x-empty icon="hand-coins" message="ຍັງບໍ່ມີກິດຈະກຳ — ສ້າງກິດຈະກຳກ່ອນ ເພື່ອຕິດຕາມການບໍລິຈາກ"><a href="{{ route('activities.index', ['new' => 1]) }}" class="btn-primary btn-sm">ສ້າງກິດຈະກຳ</a></x-empty></div>
     @else
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-stagger>
-            <x-stat-card label="ຍອດຄາດຫວັງ" :value="money($t['expected'])" :hint="'ຈາກ '.$t['count'].' ຜູ້ບໍລິຈາກ'" />
-            <x-stat-card label="ຊຳລະແລ້ວ" :value="money($t['paid'])" tone="success" :hint="$t['pct'] === null ? '—' : percent($t['pct']).' ຂອງເປົ້າໝາຍ'" />
-            <x-stat-card label="ຄ້າງຊຳລະ" :value="money($t['outstanding'])" tone="destructive" :hint="$t['outstanding_people'].' ຄົນຍັງຄ້າງ'" />
-            <div class="card card-pad">
-                <p class="text-sm font-medium text-muted">ຄວາມຄືບໜ້າລວມ</p>
-                <x-progress :value="$t['pct']" class="mt-4 h-2.5" tone="bg-primary" />
+            <x-stat-card label="ຍອດຄາດຫວັງ" icon="clipboard-list" :value="money($t['expected'])" :hint="'ຈາກ '.$t['count'].' ຜູ້ບໍລິຈາກ'" />
+            <x-stat-card label="ຊຳລະແລ້ວ" icon="circle-check" :value="money($t['paid'])" tone="success" :hint="$t['pct'] === null ? '—' : percent($t['pct']).' ຂອງເປົ້າໝາຍ'" />
+            <x-stat-card label="ຄ້າງຊຳລະ" icon="circle-alert" :value="money($t['outstanding'])" tone="destructive" :hint="$t['outstanding_people'].' ຄົນຍັງຄ້າງ'" />
+            <div class="card p-5">
+                <div class="flex items-start justify-between gap-2">
+                    <span class="stat-icon size-10 rounded-xl">{{ icon('chart-no-axes-column', 'size-5') }}</span>
+                    <span class="num text-kpi font-bold tracking-tight">{{ $t['pct'] === null ? '—' : percent($t['pct'], 0) }}</span>
+                </div>
+                <p class="mt-3 text-sm font-medium text-muted">ຄວາມຄືບໜ້າລວມ</p>
+                <x-progress :value="$t['pct']" class="mt-2.5 h-2.5" tone="bg-primary" />
                 <p class="mt-3 text-[0.8125rem] text-muted">ຄົບ {{ $t['paid_count'] + $t['over'] }} · ບາງສ່ວນ {{ $t['partial'] }} · ຍັງບໍ່ຈ່າຍ {{ $t['unpaid'] }}</p>
             </div>
         </div>
@@ -40,8 +44,8 @@
                 <input type="hidden" name="event" value="{{ $event->id }}">
                 <x-chips param="status" :options="$chips" :current="$status" label="ສະຖານະ" />
                 <div class="flex gap-2">
-                    <input name="q" value="{{ request('q') }}" class="input lg:w-64" placeholder="ຄົ້ນຫາຜູ້ບໍລິຈາກ" aria-label="ຄົ້ນຫາຜູ້ບໍລິຈາກ">
-                    @if ($canManage)<button type="button" class="btn-outline whitespace-nowrap" data-modal-open="pledge-form">+ ຜູ້ບໍລິຈາກ</button>@endif
+                    <x-search placeholder="ຄົ້ນຫາຜູ້ບໍລິຈາກ" class="lg:w-64" />
+                    @if ($canManage)<button type="button" class="btn-outline whitespace-nowrap" data-modal-open="pledge-form">{{ icon('user-round-plus', 'size-4') }} ຜູ້ບໍລິຈາກ</button>@endif
                 </div>
             </form>
             @if ($rows->isEmpty())
@@ -54,18 +58,18 @@
                         @foreach ($rows as $r)
                             @php [$label, $tone] = \App\Services\FinanceService::statusLabel($r['status']); $pid = $r['pledge']->id; $hist = $payments->get($pid, collect()); @endphp
                             <tr>
-                                <td class="font-semibold whitespace-nowrap">{{ $r['member']?->name }}</td>
+                                <td class="whitespace-nowrap"><span class="flex items-center gap-3"><x-avatar :member="$r['member']" size="sm" /><span class="font-semibold">{{ $r['member']?->name }}</span></span></td>
                                 <td class="num text-right whitespace-nowrap">{{ $r['expected'] ? money($r['expected']) : '—' }}</td>
                                 <td class="num text-right whitespace-nowrap">{{ money($r['paid']) }}</td>
                                 <td class="num text-right whitespace-nowrap {{ $r['outstanding'] ? 'text-destructive' : '' }}">{{ money($r['outstanding']) }}</td>
                                 <td><span class="flex items-center gap-3"><x-progress :value="$r['pct']" :tone="$r['pct'] !== null && $r['pct'] >= 100 ? 'bg-success' : 'bg-primary'" class="w-24" /><span class="num w-12 text-right text-sm font-semibold">{{ $r['pct'] === null ? '—' : percent($r['pct'], 0) }}</span></span></td>
                                 <td class="num whitespace-nowrap">{{ $r['last_paid_on'] ? lao_date($r['last_paid_on']) : '—' }}</td>
-                                <td><x-badge :tone="$tone">{{ $label }}</x-badge></td>
+                                <td><x-badge :tone="$tone" dot>{{ $label }}</x-badge></td>
                                 @if ($canManage)
                                     <td class="no-print">
                                         <div class="flex justify-end gap-1">
                                             <button type="button" class="btn-outline btn-sm" data-modal-open="pay-form" data-action="{{ route('donations.payments.store') }}" data-title="ບັນທຶກການຊຳລະ — {{ $r['member']?->name }}"
-                                                    data-fill="{{ json_encode(['pledge_id' => $pid, 'paid_on' => now()->toDateString(), 'method' => 'cash', 'amount' => $r['outstanding'] ?: null]) }}">+ ຊຳລະ</button>
+                                                    data-fill="{{ json_encode(['pledge_id' => $pid, 'paid_on' => now()->toDateString(), 'method' => 'cash', 'amount' => $r['outstanding'] ?: null]) }}">{{ icon('plus', 'size-4') }} ຊຳລະ</button>
                                             @if ($hist->isNotEmpty())<button type="button" class="icon-btn-sm" data-toggle="hist-{{ $pid }}" aria-expanded="false" aria-label="ປະຫວັດການຊຳລະ">{{ icon('list', 'size-4') }}</button>@endif
                                             @if ($hist->isEmpty())
                                                 <form method="POST" action="{{ route('donations.pledges.destroy', $r['pledge']) }}" data-confirm="ເອົາ {{ $r['member']?->name }} ອອກຈາກລາຍຊື່ຜູ້ບໍລິຈາກ?" data-confirm-danger>@csrf @method('DELETE')
