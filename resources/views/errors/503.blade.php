@@ -1,12 +1,3 @@
-<x-layouts.public title="503">
-<div class="flex justify-center px-4 py-24">
-    <div class="card w-full max-w-lg px-8 py-10 text-center">
-        <p class="text-[2.75rem] font-bold text-primary">503</p>
-        <h1 class="mt-2 text-[1.5rem]">ລະບົບກຳລັງປັບປຸງ</h1>
-        <div class="mt-6 flex justify-center gap-2">
-            <a href="{{ url()->previous() }}" class="btn-outline">ລອງໃໝ່</a>
-            <a href="{{ route('dashboard') }}" class="btn-primary">ກັບໜ້າຫຼັກ</a>
-        </div>
-    </div>
-</div>
-</x-layouts.public>
+<x-error-page code="503" icon="refresh-cw" title="ລະບົບກຳລັງປັບປຸງ" message="ພວກເຮົາກຳລັງປັບປຸງລະບົບ ຈະກັບມາໃຊ້ງານໄດ້ໃນອີກບໍ່ດົນ.">
+    <x-slot:actions><a href="{{ url()->current() }}" class="btn-primary">{{ icon('refresh-cw', 'size-4') }} ໂຫຼດໃໝ່</a></x-slot:actions>
+</x-error-page>

@@ -1,6 +1,6 @@
 {{-- Fund contributors — artboard "FundContributors" --}}
 <x-layouts.app title="ຜູ້ຮ່ວມກອງທຶນ" :crumbs="['ກອງທຶນ', 'ຜູ້ຮ່ວມກອງທຶນ']">
-    <x-page-header title="ຜູ້ຮ່ວມກອງທຶນ" description="ສະມາຊິກທີ່ເຂົ້າຮ່ວມກອງທຶນຕະກູນ ແລະ ຍອດບໍລິຈາກສະສົມ">
+    <x-page-header title="ຜູ້ຮ່ວມກອງທຶນ" icon="heart-handshake" description="ສະມາຊິກທີ່ເຂົ້າຮ່ວມກອງທຶນຕະກູນ ແລະ ຍອດບໍລິຈາກສະສົມ">
         <x-slot:actions>
             <a href="{{ route('fund.export') }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>
             @if ($canManage)<button type="button" class="btn-primary" data-modal-open="fund-form">{{ icon('plus', 'size-4') }} ເພີ່ມຜູ້ຮ່ວມ</button>@endif
@@ -8,33 +8,32 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-stagger>
-        <x-stat-card label="ຜູ້ຮ່ວມທັງໝົດ" :value="$count.' ຄົນ'" :hint="'+'.$newThisMonth.' ໃນເດືອນນີ້'" :hint-tone="$newThisMonth ? 'success' : null" />
-        <x-stat-card label="ຍອດບໍລິຈາກສະສົມ" :value="money($total)" tone="success" :hint="$since ? 'ຕັ້ງແຕ່ປີ '.$since : '—'" />
-        <x-stat-card label="ສະເລ່ຍຕໍ່ຄົນ" :value="money($average)" hint="ຄິດໄລ່ຈາກ transactions" />
-        <x-stat-card label="ພື້ນທີ່" :value="$provinces.' ແຂວງ'" :hint="$villages.' ບ້ານ'" />
+        <x-stat-card label="ຜູ້ຮ່ວມທັງໝົດ" icon="users" :value="$count.' ຄົນ'" :hint="'+'.$newThisMonth.' ໃນເດືອນນີ້'" :hint-tone="$newThisMonth ? 'success' : null" />
+        <x-stat-card label="ຍອດບໍລິຈາກສະສົມ" icon="piggy-bank" :value="money($total)" tone="success" :hint="$since ? 'ຕັ້ງແຕ່ປີ '.$since : '—'" />
+        <x-stat-card label="ສະເລ່ຍຕໍ່ຄົນ" icon="scale" :value="money($average)" hint="ຈາກລາຍການບໍລິຈາກທັງໝົດ" />
+        <x-stat-card label="ພື້ນທີ່" icon="map-pin" :value="$provinces.' ແຂວງ'" :hint="$villages.' ບ້ານ'" />
     </div>
 
     <div class="mt-6 grid items-start gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
-        <section class="card card-pad" aria-labelledby="by-prov">
-            <h2 id="by-prov" class="text-[1.0625rem] font-semibold">ສະຖິຕິຕາມແຂວງ</h2>
-            <p class="text-[0.8125rem] text-muted">ກົດແຂວງເພື່ອກັ່ນຕອງລາຍຊື່</p>
-            <div class="mt-4 space-y-3" data-bars>
+        <x-panel id="by-prov" title="ສະຖິຕິຕາມແຂວງ" description="ກົດແຂວງເພື່ອກັ່ນຕອງລາຍຊື່" icon="map-pin">
+            <div class="space-y-2" data-bars>
                 @forelse ($byProvince as $p)
                     @php $active = $province === $p['province']; @endphp
-                    <a href="{{ route('fund.index', $active ? [] : ['province' => $p['province']]) }}" class="block rounded-lg p-1.5 {{ $active ? 'bg-primary-soft' : 'hover:bg-surface-2/60' }}" @if ($active) aria-current="true" @endif>
+                    <a href="{{ route('fund.index', $active ? [] : ['province' => $p['province']]) }}" class="block rounded-lg p-2 transition-colors {{ $active ? 'bg-primary-soft ring-1 ring-primary/30' : 'hover:bg-surface-2/60' }}" @if ($active) aria-current="true" @endif>
                         <span class="flex items-center justify-between gap-2 text-sm"><span class="font-semibold">{{ $p['province'] }}</span><span class="num text-muted">{{ $p['contributors'] }} ຄົນ · {{ money($p['total']) }}</span></span>
-                        <span class="mt-1.5 block h-2 overflow-hidden rounded-full bg-surface-2"><span class="bar-grow block h-full rounded-full bg-gradient-to-r from-primary to-primary-strong" style="width: {{ round($p['total'] / $maxProvince * 100, 1) }}%"></span></span>
+                        <span class="mt-1.5 block h-2 overflow-hidden rounded-full bg-surface-2"><span class="bar-grow block h-full rounded-full bg-chart-1" style="width: {{ round($p['total'] / $maxProvince * 100, 1) }}%"></span></span>
                     </a>
                 @empty
                     <p class="text-sm text-muted">ຍັງບໍ່ມີຂໍ້ມູນ</p>
                 @endforelse
             </div>
-        </section>
+        </x-panel>
 
         <div class="card overflow-hidden">
-            <form method="GET" class="border-b border-border p-3">
+            <form method="GET" class="toolbar border-b border-border lg:justify-between">
                 @if ($province)<input type="hidden" name="province" value="{{ $province }}">@endif
-                <input name="q" value="{{ request('q') }}" class="input" placeholder="ຄົ້ນຫາຊື່" aria-label="ຄົ້ນຫາຊື່">
+                <x-search placeholder="ຄົ້ນຫາຊື່ຜູ້ຮ່ວມ" class="lg:w-80" />
+                @if ($province)<a href="{{ route('fund.index') }}" class="chip" aria-pressed="true">{{ icon('map-pin', 'size-4') }} {{ $province }} {{ icon('x', 'size-3.5') }}</a>@endif
             </form>
             @if ($rows->isEmpty())
                 <x-empty icon="heart-handshake" :message="$count ? 'ບໍ່ພົບຜູ້ຮ່ວມທີ່ກົງກັບຕົວກອງ' : 'ຍັງບໍ່ມີຜູ້ຮ່ວມກອງທຶນ'" />

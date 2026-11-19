@@ -133,13 +133,12 @@ function render() {
         const kids = children.get(id) || [];
         const hidden = collapsed.has(id) ? kids.length : 0;
         html += `<div class="absolute" style="left:${p.x}px;top:${p.y}px;width:${NODE_W}px">
-            <button type="button" data-node="${id}" class="flex h-[${NODE_H}px] w-full items-center gap-2 rounded-lg border bg-card px-2 text-left shadow-soft transition
-                ${isSel ? 'border-2 border-primary bg-primary-soft' : onLine ? 'border-primary' : 'border-border hover:border-input'} ${n.is_alive ? '' : 'opacity-80'}" style="height:${NODE_H}px"
+            <button type="button" data-node="${id}" class="tree-node ${female ? 'is-female' : 'is-male'} ${onLine ? 'is-lineage' : ''} ${n.is_alive ? '' : 'is-dead'}" style="height:${NODE_H}px"
                 aria-pressed="${isSel}" aria-label="${esc(n.name)}, Phaj ${n.generation}">
                 <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${n.is_alive ? (female ? 'bg-avatar-female text-avatar-female-fg' : 'bg-avatar-male text-avatar-male-fg') : 'bg-surface-2 text-muted'}">${esc(initial(n.name))}</span>
                 <span class="min-w-0 leading-tight"><span class="block truncate text-[0.8125rem] font-semibold">${esc(n.name)}</span><span class="block truncate text-[0.6875rem] text-muted">${esc(sub)}</span></span>
             </button>
-            ${kids.length && !female ? `<button type="button" data-toggle-node="${id}" class="absolute left-1/2 -bottom-3 z-10 -translate-x-1/2 rounded-full border ${hidden ? 'border-foreground' : 'border-border'} bg-card px-2 text-[0.6875rem] leading-5 font-semibold" aria-label="${hidden ? 'ເປີດ' : 'ພັບ'}ລູກ ${kids.length} ຄົນ">${hidden ? '+' + hidden : '−'}</button>` : ''}
+            ${kids.length && !female ? `<button type="button" data-toggle-node="${id}" class="tree-toggle ${hidden ? 'is-collapsed' : ''}" aria-label="${hidden ? 'ເປີດ' : 'ພັບ'}ລູກ ${kids.length} ຄົນ">${hidden ? '+' + hidden : '−'}</button>` : ''}
         </div>`;
     });
     canvas.innerHTML = html;
@@ -204,7 +203,7 @@ async function renderPanel(id) {
                 <div class="flex flex-wrap gap-2">${kids || '<span class="text-sm text-muted">ຍັງບໍ່ມີລູກໃນລະບົບ</span>'}</div>
                 <div class="mt-5 grid grid-cols-2 gap-2">
                     <a href="${esc(d.url)}" class="btn-primary ${canWrite && m.sex === 'male' ? '' : 'col-span-2'}">ເປີດຂໍ້ມູນສະມາຊິກ</a>
-                    ${canWrite && m.sex === 'male' ? `<a href="${memberUrl}?new=1&father=${m.id}" class="btn-outline">+ ເພີ່ມລູກ</a>` : ''}
+                    ${canWrite && m.sex === 'male' ? `<a href="${memberUrl}?new=1&father=${m.id}" class="btn-outline">${iconUse('plus', 'size-4')} ເພີ່ມລູກ</a>` : ''}
                 </div>
             </div>`;
     } catch {
@@ -309,3 +308,49 @@ vp.addEventListener('pointerup', endPointer);
 vp.addEventListener('pointercancel', endPointer);
 
 load();
+
+/* ----- Find a member in the tree (searches the data already loaded) ----- */
+const findInput = document.getElementById('tree-search');
+const findList = document.getElementById('tree-search-results');
+const LIMIT = 8;
+function closeFind() { findList.hidden = true; findInput.setAttribute('aria-expanded', 'false'); }
+function renderFind() {
+    const q = findInput.value.trim().toLowerCase();
+    if (!q) { closeFind(); return; }
+    const hits = [...nodes.values()].filter((n) => String(n.name).toLowerCase().includes(q)).slice(0, LIMIT);
+    findList.innerHTML = hits.length
+        ? hits.map((n, i) => `<button type="button" role="option" id="tree-opt-${n.id}" data-find="${n.id}" aria-selected="${i === 0}" class="menu-item">
+            <span class="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${n.sex === 'female' ? 'bg-avatar-female text-avatar-female-fg' : 'bg-avatar-male text-avatar-male-fg'}">${esc(initial(n.name))}</span>
+            <span class="min-w-0 flex-1 truncate">${esc(n.name)}</span><span class="badge bg-primary-soft text-xs text-primary">Phaj ${n.generation}</span></button>`).join('')
+        : `<p class="px-3 py-2.5 text-sm text-muted">ບໍ່ພົບຊື່ນີ້ໃນແຜນຜັງ</p>`;
+    findList.hidden = false;
+    findInput.setAttribute('aria-expanded', 'true');
+}
+function pick(id) {
+    collapsed.clear();
+    lineageOnly = false;
+    syncLineageBtn();
+    select(id, true);
+    findInput.value = '';
+    closeFind();
+}
+findInput?.addEventListener('input', renderFind);
+findInput?.addEventListener('keydown', (e) => {
+    const opts = [...findList.querySelectorAll('[data-find]')];
+    const cur = opts.findIndex((o) => o.getAttribute('aria-selected') === 'true');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!opts.length) return;
+        const next = (cur + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length;
+        opts.forEach((o, i) => o.setAttribute('aria-selected', String(i === next)));
+        findInput.setAttribute('aria-activedescendant', opts[next].id);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (opts[Math.max(0, cur)]) pick(Number(opts[Math.max(0, cur)].dataset.find));
+    } else if (e.key === 'Escape') {
+        findInput.value = '';
+        closeFind();
+    }
+});
+findList?.addEventListener('click', (e) => { const b = e.target.closest('[data-find]'); if (b) pick(Number(b.dataset.find)); });
+document.addEventListener('click', (e) => { if (findInput && !e.target.closest('[data-tree-find]')) closeFind(); });

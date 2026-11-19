@@ -7,8 +7,10 @@
 @endphp
 <x-layouts.public title="ບໍ່ມີສິດ">
 <div class="flex justify-center px-4 py-16 sm:py-24">
-    <div class="card w-full max-w-[39rem] px-6 py-10 text-center sm:px-14">
-        <span class="mx-auto inline-flex size-[4.5rem] items-center justify-center rounded-full bg-primary-soft text-primary">{{ icon($reason === 'pending' ? 'clock' : 'lock', 'size-8') }}</span>
+    <div class="card w-full max-w-[39rem] overflow-hidden text-center">
+        <div class="hero-band h-20" aria-hidden="true"></div>
+        <div class="px-6 pb-10 sm:px-14">
+        <span class="page-icon hero-avatar relative -mt-9 !inline-flex size-[4.5rem] rounded-2xl">{{ icon($reason === 'pending' ? 'clock' : ($reason === 'guest' ? 'key-round' : 'lock'), 'size-8') }}</span>
         @if ($page)<p class="mt-4 text-sm font-semibold text-muted">ໜ້າ: {{ $page }}</p>@endif
         @if ($reason === 'guest')
             <h1 class="mt-2 text-[1.625rem]">ກະລຸນາເຂົ້າສູ່ລະບົບ</h1>
@@ -33,6 +35,7 @@
                 <a href="{{ route('dashboard') }}" class="btn-outline">ກັບໜ້າຫຼັກ</a>
             </div>
         @endif
+        </div>
     </div>
 </div>
 </x-layouts.public>

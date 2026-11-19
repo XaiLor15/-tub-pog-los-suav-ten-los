@@ -1,8 +1,17 @@
 @php $tabUrl = fn ($t) => route('activities.show', array_merge(['event' => $e->id, 'tab' => $t], request()->only(['q', 'category', 'when']))); @endphp
 <article class="card overflow-hidden">
-    <div class="lattice relative flex h-44 items-end bg-brand-navy p-6 sm:h-48">
-        @if ($e->coverUrl())<img src="{{ $e->coverUrl() }}" alt="" class="absolute inset-0 size-full object-cover">@endif
-        <span class="relative text-sm text-white/80">@unless ($e->coverUrl())[ຮູບໜ້າປົກກິດຈະກຳ]@endunless</span>
+    <div class="hero-band relative flex h-44 items-end p-5 sm:h-52 sm:p-6">
+        @if ($e->coverUrl())
+            <img src="{{ $e->coverUrl() }}" alt="" class="absolute inset-0 size-full object-cover">
+            <span class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" aria-hidden="true"></span>
+        @endif
+        <span class="relative flex items-center gap-3 text-white">
+            <span class="flex size-14 flex-col items-center justify-center rounded-xl bg-white/15 leading-none backdrop-blur-sm ring-1 ring-white/25">
+                <span class="num text-xl font-bold">{{ $e->start_date->format('d') }}</span>
+                <span class="mt-1 text-[0.6875rem] text-white/80">{{ \App\Support\Format::monthName($e->start_date->month) }}</span>
+            </span>
+            <span class="text-sm leading-snug text-white/90">{{ $e->dateRange() }}<br>{{ $e->timeRange() }}</span>
+        </span>
     </div>
     <div class="p-5 sm:p-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
@@ -11,12 +20,12 @@
                 <h2 class="mt-2 text-[1.625rem]">{{ $e->title }}</h2>
             </div>
             <div class="flex flex-wrap gap-2">
-                @if ($canEdit)<a href="{{ route('activities.show', ['event' => $e->id, 'edit' => $e->id]) }}" class="btn-outline">ແກ້ໄຂ</a>@endif
+                @if ($canEdit)<a href="{{ route('activities.show', ['event' => $e->id, 'edit' => $e->id]) }}" class="btn-outline">{{ icon('pencil', 'size-4') }} ແກ້ໄຂ</a>@endif
                 @if ($canJoin)
                     @if ($joined)
                         <form method="POST" action="{{ route('activities.leave', $e) }}" data-confirm="ຍົກເລີກການເຂົ້າຮ່ວມ {{ $e->title }}?">@csrf @method('DELETE')<button class="btn-outline">{{ icon('check', 'size-4') }} ລົງຊື່ແລ້ວ</button></form>
                     @else
-                        <form method="POST" action="{{ route('activities.join', $e) }}">@csrf<button class="btn-primary">ລົງຊື່ເຂົ້າຮ່ວມ</button></form>
+                        <form method="POST" action="{{ route('activities.join', $e) }}">@csrf<button class="btn-primary">{{ icon('calendar-check', 'size-4') }} ລົງຊື່ເຂົ້າຮ່ວມ</button></form>
                     @endif
                 @elseif (! auth()->check())
                     <a href="{{ route('login', ['redirect' => '/activities/'.$e->id]) }}" class="btn-primary">ເຂົ້າສູ່ລະບົບເພື່ອລົງຊື່</a>
@@ -24,29 +33,30 @@
             </div>
         </div>
 
-        <nav class="mt-5 flex gap-1 overflow-x-auto border-b border-border" aria-label="ແຖບກິດຈະກຳ">
+        @php $tabIcons = ['overview' => 'info', 'participants' => 'users', 'donations' => 'hand-coins', 'expenses' => 'receipt', 'photos' => 'image']; @endphp
+        <nav class="-mx-1 mt-5 flex gap-1 overflow-x-auto border-b border-border" aria-label="ແຖບກິດຈະກຳ">
             @foreach ($tabs as $key => $label)
-                <a href="{{ $tabUrl($key) }}" class="min-h-11 border-b-2 px-3 py-2.5 font-semibold whitespace-nowrap {{ $tab === $key ? 'border-primary text-foreground' : 'border-transparent text-muted hover:text-foreground' }}" @if ($tab === $key) aria-current="page" @endif>{{ $label }}</a>
+                <a href="{{ $tabUrl($key) }}" class="tab" @if ($tab === $key) aria-current="page" @endif>{{ icon($tabIcons[$key] ?? 'info', 'size-4') }}{{ $label }}</a>
             @endforeach
         </nav>
 
         <div class="pt-5">
             @if ($tab === 'overview')
                 @can('events.view-all-tabs')
-                    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-                        <div class="rounded-xl bg-surface-2/70 p-4"><p class="text-sm text-muted">ຜູ້ເຂົ້າຮ່ວມ</p><p class="num text-2xl font-bold">{{ $summary['participants'] }}</p></div>
-                        <div class="rounded-xl bg-surface-2/70 p-4"><p class="text-sm text-muted">ຍອດບໍລິຈາກ</p><p class="num text-xl font-bold text-success">{{ money($summary['donations']) }}</p></div>
-                        <div class="rounded-xl bg-surface-2/70 p-4"><p class="text-sm text-muted">ລາຍຈ່າຍ</p><p class="num text-xl font-bold text-destructive">{{ money($summary['expenses']) }}</p></div>
-                        <div class="rounded-xl bg-primary-soft p-4"><p class="text-sm text-muted">ຍອດສຸດທິ</p><p class="num text-xl font-bold text-primary">{{ money($summary['net']) }}</p></div>
+                    <div class="grid grid-cols-2 gap-3 md:grid-cols-4" data-stagger>
+                        <div class="rounded-xl border border-border bg-surface-2/50 p-4"><p class="flex items-center gap-1.5 text-sm text-muted">{{ icon('users', 'size-4') }}ຜູ້ເຂົ້າຮ່ວມ</p><p class="num mt-1 text-2xl font-bold">{{ $summary['participants'] }}</p></div>
+                        <div class="rounded-xl border border-border bg-surface-2/50 p-4"><p class="flex items-center gap-1.5 text-sm text-muted">{{ icon('hand-coins', 'size-4') }}ຍອດບໍລິຈາກ</p><p class="num mt-1 text-lg font-bold text-success">{{ money($summary['donations']) }}</p></div>
+                        <div class="rounded-xl border border-border bg-surface-2/50 p-4"><p class="flex items-center gap-1.5 text-sm text-muted">{{ icon('receipt', 'size-4') }}ລາຍຈ່າຍ</p><p class="num mt-1 text-lg font-bold text-destructive">{{ money($summary['expenses']) }}</p></div>
+                        <div class="rounded-xl border border-primary/20 bg-primary-soft p-4"><p class="flex items-center gap-1.5 text-sm text-muted">{{ icon('scale', 'size-4') }}ຍອດສຸດທິ</p><p class="num mt-1 text-lg font-bold text-primary">{{ money($summary['net']) }}</p></div>
                     </div>
                 @endcan
-                <dl class="mt-5 grid grid-cols-[7rem_1fr] gap-y-3">
-                    <dt class="text-muted">ວັນທີ</dt><dd>{{ $e->dateRange() }}</dd>
-                    <dt class="text-muted">ເວລາ</dt><dd>{{ $e->timeRange() }}</dd>
-                    <dt class="text-muted">ສະຖານທີ່</dt><dd>{{ $e->location ?? '—' }}</dd>
-                    <dt class="text-muted">ຜູ້ຈັດ</dt><dd>{{ $e->organizer ?? '—' }}</dd>
+                <dl class="kv mt-5">
+                    <dt>{{ icon('calendar-days') }}ວັນທີ</dt><dd>{{ $e->dateRange() }}</dd>
+                    <dt>{{ icon('clock') }}ເວລາ</dt><dd>{{ $e->timeRange() }}</dd>
+                    <dt>{{ icon('map-pin') }}ສະຖານທີ່</dt><dd>{{ $e->location ?? '—' }}</dd>
+                    <dt>{{ icon('user-round') }}ຜູ້ຈັດ</dt><dd>{{ $e->organizer ?? '—' }}</dd>
                 </dl>
-                @if ($e->description)<p class="mt-4 whitespace-pre-line">{{ $e->description }}</p>@endif
+                @if ($e->description)<p class="mt-5 max-w-prose border-t border-border pt-5 leading-relaxed whitespace-pre-line">{{ $e->description }}</p>@endif
                 @if ($canEdit && auth()->user()?->isAdmin())
                     <form method="POST" action="{{ route('activities.destroy', $e) }}" class="mt-6" data-confirm="ລຶບກິດຈະກຳ {{ $e->title }}?" data-confirm-danger data-confirm-label="ລຶບ">@csrf @method('DELETE')
                         <button class="btn-danger-outline btn-sm">{{ icon('trash-2', 'size-4') }} ລຶບກິດຈະກຳ</button></form>
@@ -59,7 +69,7 @@
                         <div><label class="label">ສະມາຊິກ</label><div data-member-picker><input type="hidden" name="member_id" data-picker-value><input class="input @error('member_id') input-error @enderror" placeholder="ພິມຊື່..." data-picker-input></div>@error('member_id')<p class="error-text">{{ $message }}</p>@enderror</div>
                         <div><label for="p-duty" class="label">ໜ້າທີ່</label><input id="p-duty" name="duty" class="input" maxlength="100" placeholder="ເຊັ່ນ ຝ່າຍອາຫານ"></div>
                         <div><label class="label" for="f-status">ສະຖານະ</label><x-select name="status" :options="\App\Support\Lookups::PARTICIPANT_STATUS" selected="confirmed" /></div>
-                        <button class="btn-primary">ເພີ່ມ</button>
+                        <button class="btn-primary">{{ icon('plus', 'size-4') }} ເພີ່ມ</button>
                     </form>
                 @endif
                 @forelse ($participants as $p)
@@ -77,7 +87,7 @@
                 @endforelse
 
             @elseif ($tab === 'donations')
-                <div class="mb-3 flex justify-end"><a href="{{ route('donations.index', ['event' => $e->id]) }}" class="link text-sm">ໄປໜ້າຕິດຕາມການບໍລິຈາກ →</a></div>
+                <div class="mb-3 flex justify-end"><a href="{{ route('donations.index', ['event' => $e->id]) }}" class="group inline-flex items-center gap-1 text-sm font-semibold text-primary">ໄປໜ້າຕິດຕາມການບໍລິຈາກ {{ icon('arrow-right', 'size-4 transition-transform group-hover:translate-x-0.5') }}</a></div>
                 @forelse ($progress as $r)
                     @php [$label, $tone] = \App\Services\FinanceService::statusLabel($r['status']); @endphp
                     <div class="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 border-b border-border py-2.5 last:border-0 sm:grid-cols-[10rem_1fr_8rem_6rem]">
@@ -99,7 +109,7 @@
                 @empty
                     <x-empty icon="wallet" message="ຍັງບໍ່ມີລາຍຈ່າຍສຳລັບກິດຈະກຳນີ້" />
                 @endforelse
-                @can('finance.manage')<a href="{{ route('finance.index', ['new' => 1, 'event' => $e->id]) }}" class="btn-outline btn-sm mt-4">+ ບັນທຶກລາຍຈ່າຍ</a>@endcan
+                @can('finance.manage')<a href="{{ route('finance.index', ['new' => 1, 'event' => $e->id]) }}" class="btn-outline btn-sm mt-4">{{ icon('plus', 'size-4') }} ບັນທຶກລາຍຈ່າຍ</a>@endcan
 
             @elseif ($tab === 'photos')
                 @if ($canEdit)
@@ -115,7 +125,7 @@
                     @forelse ($media as $m)
                         <div class="group relative aspect-square overflow-hidden rounded-xl bg-surface-2">
                             <a href="{{ $m->url() }}" data-lightbox="event-{{ $e->id }}" @if ($m->isVideo()) data-video="1" @endif class="block size-full">
-                                @if ($m->isVideo())<span class="flex size-full items-center justify-center text-muted">▶ ວິດີໂອ</span>@else<img src="{{ $m->url() }}" alt="" loading="lazy" class="size-full object-cover">@endif
+                                @if ($m->isVideo())<span class="flex size-full flex-col items-center justify-center gap-1.5 text-sm text-muted">{{ icon('circle-play', 'size-8') }}ວິດີໂອ</span>@else<img src="{{ $m->url() }}" alt="" loading="lazy" class="size-full object-cover transition-transform duration-500 group-hover:scale-105">@endif
                             </a>
                             @if ($canEdit)
                                 <form method="POST" action="{{ route('activities.media.destroy', [$e, $m]) }}" class="absolute top-2 right-2" data-confirm="ລຶບຮູບນີ້?" data-confirm-danger>@csrf @method('DELETE')

@@ -6,7 +6,7 @@
     $openForm = $canManage && (request()->boolean('new') || $editing || ($errors->any() && old('_form') === 'elder'));
 @endphp
 <x-layouts.app title="ຜູ້ອາວຸໂສ" :crumbs="['ຕະກູນ', 'ຜູ້ອາວຸໂສ']">
-    <x-page-header title="ຜູ້ອາວຸໂສ" description="ຜູ້ຮັກສາຮີດຄອງ ແລະ ຄວາມຮູ້ດັ້ງເດີມຂອງຕະກູນ">
+    <x-page-header title="ຜູ້ອາວຸໂສ" icon="book-user" description="ຜູ້ຮັກສາຮີດຄອງ ແລະ ຄວາມຮູ້ດັ້ງເດີມຂອງຕະກູນ">
         <x-slot:actions>
             @can('view-private')<a href="{{ route('elders.export') }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>@endcan
             @if ($canManage)<a href="{{ route('elders.index', ['new' => 1]) }}" class="btn-primary">{{ icon('plus', 'size-4') }} ເພີ່ມຜູ້ອາວຸໂສ</a>@endif
@@ -14,14 +14,14 @@
     </x-page-header>
 
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4" data-stagger>
-        <x-stat-card label="ຜູ້ອາວຸໂສທັງໝົດ" :value="$total" :hint="$categories.' ບົດບາດ'" />
-        <x-stat-card label="ຍັງມີຊີວິດ" :value="$alive" :hint="$avgAge ? 'ອາຍຸສະເລ່ຍ '.$avgAge.' ປີ' : '—'" />
-        <x-stat-card label="ເສຍຊີວິດແລ້ວ" :value="$total - $alive" hint="ບັນທຶກໄວ້ເພື່ອລະນຶກ" />
-        <x-stat-card label="ຜູ້ສືບທອດ" :value="$successors" :hint="$withoutSuccessor ? $withoutSuccessor.' ທ່ານຍັງບໍ່ມີຜູ້ສືບທອດ' : 'ທຸກທ່ານມີຜູ້ສືບທອດ'" :hint-tone="$withoutSuccessor ? 'warning' : null" />
+        <x-stat-card label="ຜູ້ອາວຸໂສທັງໝົດ" icon="book-user" :value="$total" :hint="$categories.' ບົດບາດ'" />
+        <x-stat-card label="ຍັງມີຊີວິດ" icon="heart-handshake" :value="$alive" :hint="$avgAge ? 'ອາຍຸສະເລ່ຍ '.$avgAge.' ປີ' : '—'" />
+        <x-stat-card label="ເສຍຊີວິດແລ້ວ" icon="history" :value="$total - $alive" hint="ບັນທຶກໄວ້ເພື່ອລະນຶກ" />
+        <x-stat-card label="ຜູ້ສືບທອດ" icon="user-check" :value="$successors" :hint="$withoutSuccessor ? $withoutSuccessor.' ທ່ານຍັງບໍ່ມີຜູ້ສືບທອດ' : 'ທຸກທ່ານມີຜູ້ສືບທອດ'" :hint-tone="$withoutSuccessor ? 'warning' : null" />
     </div>
 
-    <form method="GET" class="card mt-6 flex flex-col gap-3 p-3 lg:flex-row lg:items-center">
-        <input name="q" value="{{ request('q') }}" class="input lg:w-72" placeholder="ຄົ້ນຫາຊື່" aria-label="ຄົ້ນຫາ">
+    <form method="GET" class="card toolbar mt-6">
+        <x-search placeholder="ຄົ້ນຫາຊື່ຜູ້ອາວຸໂສ" class="lg:w-72" />
         @if (request('cat'))<input type="hidden" name="cat" value="{{ request('cat') }}">@endif
         <x-chips param="cat" :options="$chips" :current="request('cat', '')" label="ບົດບາດ" />
     </form>
@@ -35,12 +35,16 @@
                     @foreach ($elders as $e)
                         @php $m = $e->member; @endphp
                         <a href="{{ route('elders.show', array_merge(['elder' => $e->id], request()->only(['q', 'cat']))) }}"
-                           class="card card-hover flex flex-col items-center p-5 text-center {{ $selected?->id === $e->id ? 'border-2 !border-primary bg-primary-soft/40' : '' }}">
-                            <x-avatar :member="$m" :url="$e->photoUrl()" size="xl" />
-                            <p class="mt-3 text-[1.0625rem] font-bold">{{ $m?->name }}</p>
+                           @if ($selected?->id === $e->id) aria-current="true" @endif
+                           class="card card-hover group flex flex-col items-center overflow-hidden text-center aria-[current]:!border-primary aria-[current]:shadow-[0_0_0_3px_var(--ring)]">
+                            <span class="hero-band h-14 w-full opacity-90 transition-opacity group-hover:opacity-100" aria-hidden="true"></span>
+                            <span class="hero-avatar -mt-10 inline-flex rounded-full {{ $m?->is_alive ? '' : 'grayscale' }}"><x-avatar :member="$m" :url="$e->photoUrl()" size="xl" /></span>
+                            <div class="flex w-full flex-1 flex-col items-center px-4 pb-5">
+                            <p class="mt-3 text-[1.0625rem] leading-snug font-bold">{{ $m?->name }}</p>
                             <x-badge tone="primary" class="mt-1">{{ $e->role_title }}</x-badge>
                             <p class="mt-2 text-sm text-muted">Phaj {{ $m?->generation }} · {{ $m?->is_alive ? ($m->age() ? 'ອາຍຸ '.$m->age().' ປີ' : '—') : $m?->lifeSpan() }}</p>
-                            @unless ($m?->is_alive)<x-badge class="mt-2">ເສຍຊີວິດແລ້ວ</x-badge>@endunless
+                            @unless ($m?->is_alive)<x-badge class="mt-2" dot>ເສຍຊີວິດແລ້ວ</x-badge>@endunless
+                            </div>
                         </a>
                     @endforeach
                 </div>
@@ -49,28 +53,28 @@
 
         @if ($selected)
             @php $m = $selected->member; @endphp
-            <section class="card order-1 p-5 xl:order-2 xl:sticky xl:top-24" aria-label="ລາຍລະອຽດ {{ $m?->name }}">
-                <div class="flex items-start gap-4">
-                    <x-avatar :member="$m" :url="$selected->photoUrl()" size="xl" />
-                    <div class="min-w-0 flex-1">
-                        <h2 class="text-[1.375rem]">{{ $m?->name }}</h2>
-                        <div class="mt-1 flex flex-wrap gap-1.5"><x-badge tone="primary">{{ $selected->role_title }}</x-badge><x-badge :tone="$m?->is_alive ? 'success' : 'neutral'">{{ $m?->is_alive ? 'ມີຊີວິດ' : 'ເສຍຊີວິດແລ້ວ' }}</x-badge></div>
-                    </div>
-                    <a href="{{ route('elders.index') }}" class="icon-btn-sm" aria-label="ປິດ">{{ icon('x', 'size-4') }}</a>
-                </div>
-                <dl class="mt-5 grid grid-cols-[5.5rem_1fr] gap-y-2">
-                    <dt class="text-muted">Phaj</dt><dd>Phaj {{ $m?->generation }}</dd>
-                    <dt class="text-muted">ອາຍຸ</dt><dd>{{ $m?->age() ? $m->age().' ປີ' : '—' }}{{ $m?->birthYear() ? ' (ເກີດ '.$m->birthYear().')' : '' }}</dd>
-                    <dt class="text-muted">ໝວດ</dt><dd>{{ $selected->categoryLabel() }}</dd>
-                    <dt class="text-muted">ເບີໂທ</dt><dd class="num">@if ($private){{ phone_display($m?->phone) }}@else<x-locked />@endif</dd>
+            <section class="card order-1 overflow-hidden xl:order-2 xl:sticky xl:top-24" aria-label="ລາຍລະອຽດ {{ $m?->name }}">
+                <x-profile-hero :title="$m?->name ?? '—'" :subtitle="$selected->categoryLabel()">
+                    <x-slot:avatar><x-avatar :member="$m" :url="$selected->photoUrl()" size="xl" /></x-slot:avatar>
+                    <x-slot:badges>
+                        <x-badge tone="primary">{{ $selected->role_title }}</x-badge>
+                        <x-badge :tone="$m?->is_alive ? 'success' : 'neutral'" dot>{{ $m?->is_alive ? 'ມີຊີວິດ' : 'ເສຍຊີວິດແລ້ວ' }}</x-badge>
+                    </x-slot:badges>
+                    <x-slot:actions><a href="{{ route('elders.index') }}" class="band-btn" aria-label="ປິດ">{{ icon('x', 'size-4') }}</a></x-slot:actions>
+                </x-profile-hero>
+                <div class="px-5 pb-5 sm:px-6">
+                <dl class="kv">
+                    <dt>{{ icon('network') }}Phaj</dt><dd>Phaj {{ $m?->generation }}</dd>
+                    <dt>{{ icon('cake') }}ອາຍຸ</dt><dd>{{ $m?->age() ? $m->age().' ປີ' : '—' }}{{ $m?->birthYear() ? ' (ເກີດ '.$m->birthYear().')' : '' }}</dd>
+                    <dt>{{ icon('phone') }}ເບີໂທ</dt><dd class="num">@if ($private){{ phone_display($m?->phone) }}@else<x-locked />@endif</dd>
                 </dl>
-                <h3 class="mt-5 font-semibold">ປະຫວັດຫຍໍ້</h3>
-                <p class="mt-1 text-[0.9375rem] whitespace-pre-line">{{ $selected->bio ?: '—' }}</p>
-                <h3 class="mt-5 font-semibold">ຄວາມຊຳນານ</h3>
+                <h3 class="mt-6 mb-1.5 text-[0.9375rem] font-semibold">ປະຫວັດຫຍໍ້</h3>
+                <p class="text-[0.9375rem] leading-relaxed whitespace-pre-line">{{ $selected->bio ?: '—' }}</p>
+                <h3 class="mt-6 text-[0.9375rem] font-semibold">ຄວາມຊຳນານ</h3>
                 <div class="mt-2 flex flex-wrap gap-2">
-                    @forelse ($selected->skills ?? [] as $skill)<span class="rounded-full border border-border px-3 py-1 text-sm">{{ $skill }}</span>@empty<span class="text-sm text-muted">—</span>@endforelse
+                    @forelse ($selected->skills ?? [] as $skill)<span class="rounded-full bg-heritage-soft px-3 py-1 text-sm font-medium text-warning">{{ $skill }}</span>@empty<span class="text-sm text-muted">—</span>@endforelse
                 </div>
-                <h3 class="mt-5 font-semibold">ຜູ້ສືບທອດ</h3>
+                <h3 class="mt-6 text-[0.9375rem] font-semibold">ຜູ້ສືບທອດ</h3>
                 <div class="mt-2 flex flex-wrap gap-2">
                     @forelse ($selected->successors as $s)
                         <a href="{{ route('members.show', $s) }}" class="inline-flex items-center gap-2 rounded-full border border-border py-1 pr-3 pl-1 text-sm hover:bg-surface-2"><x-avatar :member="$s" size="xs" />{{ $s->name }}</a>
@@ -79,13 +83,14 @@
                     @endforelse
                 </div>
                 <div class="mt-6 grid grid-cols-2 gap-2">
-                    <a href="{{ route('members.show', $selected->member_id) }}" class="btn-outline">ເບິ່ງໃນລາຍຊື່ສະມາຊິກ</a>
-                    <a href="{{ route('members.index', ['view' => 'tree', 'id' => $selected->member_id]) }}" class="btn-outline">ເບິ່ງໃນແຜນຜັງ</a>
+                    <a href="{{ route('members.show', $selected->member_id) }}" class="btn-outline">{{ icon('user-round', 'size-4') }} ຂໍ້ມູນສະມາຊິກ</a>
+                    <a href="{{ route('members.index', ['view' => 'tree', 'id' => $selected->member_id]) }}" class="btn-outline">{{ icon('network', 'size-4') }} ໃນແຜນຜັງ</a>
                     @if ($canManage)
-                        <a href="{{ route('elders.show', ['elder' => $selected->id, 'edit' => $selected->id]) }}" class="btn-primary col-span-2">ແກ້ໄຂຂໍ້ມູນ</a>
+                        <a href="{{ route('elders.show', ['elder' => $selected->id, 'edit' => $selected->id]) }}" class="btn-primary col-span-2">{{ icon('pencil', 'size-4') }} ແກ້ໄຂຂໍ້ມູນ</a>
                         <form method="POST" action="{{ route('elders.destroy', $selected) }}" class="col-span-2" data-confirm="ເອົາ {{ $m?->name }} ອອກຈາກລາຍຊື່ຜູ້ອາວຸໂສ? ຂໍ້ມູນສະມາຊິກຈະບໍ່ຖືກລຶບ." data-confirm-danger data-confirm-label="ເອົາອອກ">
-                            @csrf @method('DELETE')<button class="btn-danger-outline btn-sm w-full">ເອົາອອກຈາກຜູ້ອາວຸໂສ</button></form>
+                            @csrf @method('DELETE')<button class="btn-danger-outline btn-sm w-full">{{ icon('trash-2', 'size-4') }} ເອົາອອກຈາກຜູ້ອາວຸໂສ</button></form>
                     @endif
+                </div>
                 </div>
             </section>
         @endif

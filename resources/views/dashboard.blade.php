@@ -162,11 +162,11 @@
             </ul>
         </x-panel>
 
-        <x-panel id="latest-news" title="ຂ່າວລ່າສຸດ" icon="newspaper" :href="route('news.index')" link-label="ທັງໝົດ" flush :class="$canFinance ? 'xl:col-span-12' : 'xl:col-span-5'">
-            <ul @class(['grid gap-3 px-2 pb-2 sm:grid-cols-2 xl:grid-cols-3' => $canFinance, 'divide-y divide-border/70' => ! $canFinance]) data-stagger>
+        <x-panel id="latest-news" title="ຂ່າວລ່າສຸດ" icon="newspaper" :href="route('news.index')" link-label="ທັງໝົດ" flush :class="$canFinance ? 'xl:col-span-7' : 'xl:col-span-5'">
+            <ul class="divide-y divide-border/70" data-stagger>
                 @forelse ($news as $item)
                     <li>
-                        <a href="{{ route('news.show', $item) }}" @class(['group block h-full rounded-xl p-2.5 transition-colors hover:bg-surface-2/80 focus-visible:bg-surface-2', 'border border-border !p-4 card-hover hover:!bg-card' => $canFinance])>
+                        <a href="{{ route('news.show', $item) }}" class="group block rounded-xl p-2.5 transition-colors hover:bg-surface-2/80 focus-visible:bg-surface-2">
                             <span class="flex flex-wrap items-center gap-2 text-caption text-muted">
                                 <x-badge tone="primary" class="text-xs">{{ $item->category }}</x-badge>
                                 <span>{{ Format::ago($item->published_at) }}</span>
@@ -181,5 +181,13 @@
             </ul>
         </x-panel>
 
+
+        @auth
+            <x-panel id="dash-notif-h" title="ແຈ້ງເຕືອນລ່າສຸດ" icon="bell" flush :class="$canFinance ? 'xl:col-span-5' : 'xl:col-span-12'">
+                <div id="dash-notifs" class="space-y-0.5" aria-live="polite">
+                    <x-skeleton :rows="3" class="!p-2" />
+                </div>
+            </x-panel>
+        @endauth
     </div>
 </x-layouts.app>
