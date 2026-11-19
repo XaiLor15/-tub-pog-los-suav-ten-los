@@ -1,6 +1,7 @@
-@props(['name', 'options' => [], 'selected' => null, 'placeholder' => null])
+@props(['name', 'options' => [], 'selected' => null, 'placeholder' => null, 'id' => null])
+{{-- id defaults to f-{name} (matches x-field's label); pass a unique id when the same name appears twice on a page. --}}
 <div class="relative">
-    <select name="{{ $name }}" id="f-{{ $name }}" {{ $attributes->class(['input appearance-none pr-9', 'input-error' => $errors->has($name)]) }}>
+    <select name="{{ $name }}" id="{{ $id ?? 'f-'.$name }}" {{ $attributes->class(['input appearance-none pr-9 cursor-pointer', 'input-error' => $errors->has($name)]) }}>
         @if ($placeholder !== null)<option value="">{{ $placeholder }}</option>@endif
         @foreach ($options as $value => $text)
             <option value="{{ $value }}" @selected((string) $selected === (string) $value)>{{ $text }}</option>

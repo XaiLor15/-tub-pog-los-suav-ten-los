@@ -5,7 +5,7 @@
         {{ $eyebrow ?? '' }}
         <h1 class="text-foreground">{{ $title }}</h1>
         @if ($description)
-            <p class="mt-1 text-[0.9375rem] text-muted">{{ $description }}</p>
+            <p class="mt-1 max-w-2xl text-[0.9375rem] text-muted">{{ $description }}</p>
         @endif
     </div>
     @isset($actions)

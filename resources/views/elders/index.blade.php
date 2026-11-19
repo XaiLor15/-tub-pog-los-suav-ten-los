@@ -8,12 +8,12 @@
 <x-layouts.app title="ຜູ້ອາວຸໂສ" :crumbs="['ຕະກູນ', 'ຜູ້ອາວຸໂສ']">
     <x-page-header title="ຜູ້ອາວຸໂສ" description="ຜູ້ຮັກສາຮີດຄອງ ແລະ ຄວາມຮູ້ດັ້ງເດີມຂອງຕະກູນ">
         <x-slot:actions>
-            @can('view-private')<a href="{{ route('elders.export') }}" class="btn-outline">{{ icon('download', 'size-4') }} Export CSV</a>@endcan
+            @can('view-private')<a href="{{ route('elders.export') }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>@endcan
             @if ($canManage)<a href="{{ route('elders.index', ['new' => 1]) }}" class="btn-primary">{{ icon('plus', 'size-4') }} ເພີ່ມຜູ້ອາວຸໂສ</a>@endif
         </x-slot:actions>
     </x-page-header>
 
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4" data-stagger>
         <x-stat-card label="ຜູ້ອາວຸໂສທັງໝົດ" :value="$total" :hint="$categories.' ບົດບາດ'" />
         <x-stat-card label="ຍັງມີຊີວິດ" :value="$alive" :hint="$avgAge ? 'ອາຍຸສະເລ່ຍ '.$avgAge.' ປີ' : '—'" />
         <x-stat-card label="ເສຍຊີວິດແລ້ວ" :value="$total - $alive" hint="ບັນທຶກໄວ້ເພື່ອລະນຶກ" />
@@ -29,13 +29,13 @@
     <div class="mt-4 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div class="{{ $selected ? 'order-2 xl:order-1' : '' }}">
             @if ($elders->isEmpty())
-                <div class="card"><x-empty icon="user" :message="request()->hasAny(['q', 'cat']) ? 'ບໍ່ພົບຜູ້ອາວຸໂສທີ່ກົງກັບຕົວກອງ' : 'ຍັງບໍ່ມີຂໍ້ມູນຜູ້ອາວຸໂສ'" /></div>
+                <div class="card"><x-empty icon="book-user" :message="request()->hasAny(['q', 'cat']) ? 'ບໍ່ພົບຜູ້ອາວຸໂສທີ່ກົງກັບຕົວກອງ' : 'ຍັງບໍ່ມີຂໍ້ມູນຜູ້ອາວຸໂສ'" /></div>
             @else
-                <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-3" data-stagger>
                     @foreach ($elders as $e)
                         @php $m = $e->member; @endphp
                         <a href="{{ route('elders.show', array_merge(['elder' => $e->id], request()->only(['q', 'cat']))) }}"
-                           class="card flex flex-col items-center p-5 text-center transition hover:border-input {{ $selected?->id === $e->id ? 'border-2 !border-primary bg-primary-soft/40' : '' }}">
+                           class="card card-hover flex flex-col items-center p-5 text-center {{ $selected?->id === $e->id ? 'border-2 !border-primary bg-primary-soft/40' : '' }}">
                             <x-avatar :member="$m" :url="$e->photoUrl()" size="xl" />
                             <p class="mt-3 text-[1.0625rem] font-bold">{{ $m?->name }}</p>
                             <x-badge tone="primary" class="mt-1">{{ $e->role_title }}</x-badge>

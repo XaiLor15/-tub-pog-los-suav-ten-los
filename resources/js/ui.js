@@ -1,4 +1,6 @@
 import { postJson } from './http';
+import { closeDialog } from './motion';
+import { spinner } from './ui-states';
 
 const isGuest = () => document.documentElement.hasAttribute('data-guest');
 
@@ -11,8 +13,10 @@ document.addEventListener('submit', (e) => {
     if (!dlg) { if (window.confirm(form.dataset.confirm)) { form.dataset.confirmed = '1'; form.requestSubmit(e.submitter ?? undefined); } return; }
     dlg.querySelector('[data-confirm-message]').textContent = form.dataset.confirm;
     const ok = dlg.querySelector('[data-confirm-ok]');
-    ok.className = form.hasAttribute('data-confirm-danger') ? 'btn-danger' : 'btn-primary';
+    const danger = form.hasAttribute('data-confirm-danger');
+    ok.className = danger ? 'btn-danger' : 'btn-primary';
     ok.textContent = form.dataset.confirmLabel || 'ຢືນຢັນ';
+    dlg.querySelector('[data-confirm-icon]')?.classList.toggle('is-error', danger);
     dlg.returnValue = '';
     dlg.showModal();
     dlg.addEventListener('close', function onClose() {
@@ -25,13 +29,21 @@ document.addEventListener('submit', (e) => {
 document.addEventListener('submit', (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement) || e.defaultPrevented || (form.dataset.confirm && !form.dataset.confirmed)) return;
+    if (form.getAttribute('method') === 'dialog') return;   // in-dialog forms (confirm) close the dialog, they do not submit
     const btn = e.submitter && e.submitter.form === form ? e.submitter : form.querySelector('button:not([type=button]),[type=submit]');
     if (!btn || btn.disabled) return;
     if (form.dataset.submitting) { e.preventDefault(); return; }
     form.dataset.submitting = '1';
     setTimeout(() => {
         btn.disabled = true;
-        if (form.hasAttribute('data-busy') || btn.dataset.busyLabel) btn.textContent = btn.dataset.busyLabel || 'ກຳລັງບັນທຶກ...';
+        btn.setAttribute('data-loading', '');
+        btn.setAttribute('aria-busy', 'true');
+        if (form.hasAttribute('data-busy') || btn.dataset.busyLabel) {
+            btn.innerHTML = `${spinner()} <span>${btn.dataset.busyLabel || 'ກຳລັງບັນທຶກ...'}</span>`;
+        } else if (!btn.querySelector('.spinner')) {
+            btn.insertAdjacentHTML('afterbegin', spinner());
+            btn.querySelector('svg[data-icon]')?.remove();
+        }
     }, 0);
 });
 
@@ -51,7 +63,7 @@ document.addEventListener('click', (e) => {
         const dlg = document.getElementById(t.dataset.modalOpen);
         if (dlg) { prefillDialog(dlg, t); dlg.showModal(); }
     }
-    if (t.hasAttribute('data-modal-close')) t.closest('dialog')?.close();
+    if (t.hasAttribute('data-modal-close')) closeDialog(t.closest('dialog'));
     if (t.dataset.toggle) {
         const el = document.getElementById(t.dataset.toggle);
         el?.classList.toggle('hidden');
@@ -63,11 +75,11 @@ document.addEventListener('click', (e) => {
         const input = document.getElementById(t.dataset.reveal);
         if (input) input.type = input.type === 'password' ? 'text' : 'password';
     }
-    if (t.hasAttribute('data-dismiss')) t.closest('[data-dismissable]')?.remove();
+    if (t.hasAttribute('data-dismiss')) dismissToast(t.closest('[data-dismissable]'));
 });
 
 /* Clicking the dialog backdrop closes it. */
-document.addEventListener('click', (e) => { if (e.target instanceof HTMLDialogElement) e.target.close(); });
+document.addEventListener('click', (e) => { if (e.target instanceof HTMLDialogElement) closeDialog(e.target); });
 document.querySelectorAll('dialog[data-autoopen]').forEach((d) => d.showModal());
 
 /**
@@ -167,11 +179,24 @@ document.addEventListener('change', (e) => {
     out.className = tooBig.length ? 'error-text' : 'hint';
 });
 
-/* ---------- Toasts ---------- */
-document.querySelectorAll('[data-autodismiss]').forEach((el) => setTimeout(() => el.remove(), 5000));
+/* ---------- Toasts: fade out, then remove ---------- */
+function dismissToast(el) {
+    if (!el) return;
+    el.style.transition = 'opacity 200ms, transform 200ms';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px) scale(0.97)';
+    setTimeout(() => el.remove(), 210);
+}
+document.querySelectorAll('[data-autodismiss]').forEach((el) => {
+    let timer = setTimeout(() => dismissToast(el), 5000);
+    // Pause while hovered so the message can be read.
+    el.addEventListener('mouseenter', () => clearTimeout(timer));
+    el.addEventListener('mouseleave', () => { timer = setTimeout(() => dismissToast(el), 2000); });
+});
 
 /* ---------- Esc closes the mobile drawer ---------- */
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') drawer.close(); });
+document.addEventListener('click', (e) => { if (e.target.closest('#sidebar a[href]') && window.innerWidth < 1024) drawer.close(); });
 
 /* ---------- Print buttons ---------- */
 document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')) window.print(); });

@@ -10,7 +10,7 @@
     <x-page-header title="ການເງິນ" description="ລາຍຮັບ-ລາຍຈ່າຍຂອງຕະກູນ · ຄິດໄລ່ຍອດຈາກຖານຂໍ້ມູນ">
         <x-slot:actions>
             <button type="button" class="btn-outline" data-print>{{ icon('printer', 'size-4') }} ພິມ</button>
-            <a href="{{ route('finance.export', $keep) }}" class="btn-outline">{{ icon('download', 'size-4') }} Export CSV</a>
+            <a href="{{ route('finance.export', $keep) }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>
             @if ($canManage)
                 <button type="button" class="btn-primary" data-modal-open="tx-form" data-action="{{ route('finance.store') }}" data-title="ບັນທຶກທຸລະກຳ" data-fill='{"date":"{{ now()->toDateString() }}","type":"expense"}'>{{ icon('plus', 'size-4') }} ບັນທຶກທຸລະກຳ</button>
             @endif
@@ -21,18 +21,18 @@
         <x-info-banner class="no-print mb-4">ທ່ານເບິ່ງໄດ້ຢ່າງດຽວ — ການບັນທຶກ/ແກ້ໄຂ/ລຶບ ສະເພາະຜູ້ດູແລລະບົບ.</x-info-banner>
     @endunless
 
-    <div class="grid gap-4 md:grid-cols-3">
-        <div class="rounded-xl bg-brand-navy p-5 text-white shadow-soft">
+    <div class="grid gap-4 md:grid-cols-3" data-stagger>
+        <div class="surface-brand card-hover relative overflow-hidden rounded-xl p-5 shadow-lift">
             <p class="text-sm text-white/80">ຍອດຄົງເຫຼືອທັງໝົດ</p>
-            <p class="num mt-1 text-[1.875rem] font-bold">{{ money($overall['balance']) }}</p>
+            <p class="num mt-1 text-[1.875rem] font-bold tracking-tight" data-countup="{{ max(0, $overall['balance']) }}" data-suffix=" ₭">{{ money($overall['balance']) }}</p>
             <p class="text-[0.8125rem] text-white/70">ອັບເດດ {{ lao_date(now()) }} · ຈາກ v_finance_summary</p>
         </div>
-        <div class="card card-pad">
+        <div class="card card-pad card-hover">
             <p class="flex items-center gap-2 text-sm text-muted"><span class="inline-flex size-7 items-center justify-center rounded-md bg-success-bg text-success">{{ icon('arrow-down-left', 'size-4') }}</span>ລາຍຮັບ (ຊ່ວງທີ່ເລືອກ)</p>
             <p class="num mt-1 text-2xl font-bold text-success">{{ money($range['income']) }}</p>
             <p class="text-[0.8125rem] text-muted">ລວມເງິນບໍລິຈາກ {{ money($range['donation']) }}</p>
         </div>
-        <div class="card card-pad">
+        <div class="card card-pad card-hover">
             <p class="flex items-center gap-2 text-sm text-muted"><span class="inline-flex size-7 items-center justify-center rounded-md bg-destructive-bg text-destructive">{{ icon('arrow-up-right', 'size-4') }}</span>ລາຍຈ່າຍ (ຊ່ວງທີ່ເລືອກ)</p>
             <p class="num mt-1 text-2xl font-bold text-destructive">{{ money($range['expense']) }}</p>
             <p class="text-[0.8125rem] text-muted">{{ $range['expense_count'] }} ລາຍການ</p>
@@ -52,8 +52,8 @@
                 <span class="text-muted">–</span>
                 <input type="date" name="to" value="{{ $to }}" class="input lg:w-40" aria-label="ຫາວັນທີ" data-autosubmit>
             </div>
-            <div class="lg:w-40"><x-select name="category" :options="$catOptions" :selected="request('category')" data-autosubmit aria-label="ໝວດ" /></div>
-            <div class="lg:w-52"><x-select name="event" :options="$eventOptions" :selected="request('event')" data-autosubmit aria-label="ກິດຈະກຳ" /></div>
+            <div class="lg:w-40"><x-select name="category" id="filter-category" :options="$catOptions" :selected="request('category')" data-autosubmit aria-label="ໝວດ" /></div>
+            <div class="lg:w-52"><x-select name="event" id="filter-event" :options="$eventOptions" :selected="request('event')" data-autosubmit aria-label="ກິດຈະກຳ" /></div>
         </form>
 
         @if ($transactions->isEmpty())

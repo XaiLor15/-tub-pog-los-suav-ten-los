@@ -1,7 +1,7 @@
 {{-- Login / Register (tabs) — artboard "Login" --}}
 <x-layouts.public :title="$tab === 'register' ? 'ລົງທະບຽນ' : 'ເຂົ້າສູ່ລະບົບ'" bare>
 <div class="grid min-h-dvh lg:grid-cols-[48%_1fr]">
-    <section class="relative hidden overflow-hidden bg-brand-navy px-14 py-14 text-white lg:flex lg:flex-col">
+    <section class="surface-brand relative hidden overflow-hidden px-14 py-14 text-white lg:flex lg:flex-col">
         <div class="lattice pointer-events-none absolute right-0 bottom-0 h-2/3 w-1/2 opacity-60"></div>
         <a href="{{ route('dashboard') }}" class="relative flex items-center gap-3">
             <x-logo class="size-12" />

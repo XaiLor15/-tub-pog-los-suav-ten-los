@@ -10,9 +10,9 @@
     <p class="print-only mb-4 text-sm">ລາຍງານການບໍລິຈາກ · {{ $event?->title }} · ພິມວັນທີ {{ lao_date(now(), true) }}</p>
     <x-page-header title="ຕິດຕາມການບໍລິຈາກ" description="ຍອດຄາດຫວັງ, ຊຳລະແລ້ວ ແລະ ຄ້າງຊຳລະ ຂອງແຕ່ລະຄົນ ຕໍ່ກິດຈະກຳ">
         <x-slot:actions>
-            <form method="GET" class="w-64"><x-select name="event" :options="$events->pluck('title', 'id')->all()" :selected="$event?->id" data-autosubmit aria-label="ເລືອກກິດຈະກຳ" /></form>
+            <form method="GET" class="w-64"><x-select name="event" id="filter-event" :options="$events->pluck('title', 'id')->all()" :selected="$event?->id" data-autosubmit aria-label="ເລືອກກິດຈະກຳ" /></form>
             <button type="button" class="btn-outline" data-print>{{ icon('printer', 'size-4') }} ພິມ</button>
-            @if ($event)<a href="{{ route('donations.export', ['event' => $event->id]) }}" class="btn-outline">{{ icon('download', 'size-4') }} Export CSV</a>@endif
+            @if ($event)<a href="{{ route('donations.export', ['event' => $event->id]) }}" class="btn-outline">{{ icon('file-down', 'size-4') }} Export CSV</a>@endif
             @if ($canManage && $event)
                 <button type="button" class="btn-primary" data-modal-open="pay-form" data-action="{{ route('donations.payments.store') }}" data-title="ບັນທຶກການຊຳລະ" data-fill='{"paid_on":"{{ now()->toDateString() }}","method":"cash"}'>{{ icon('plus', 'size-4') }} ບັນທຶກການຊຳລະ</button>
             @endif
@@ -20,9 +20,9 @@
     </x-page-header>
 
     @if (! $event)
-        <div class="card"><x-empty icon="target" message="ຍັງບໍ່ມີກິດຈະກຳ — ສ້າງກິດຈະກຳກ່ອນ ເພື່ອຕິດຕາມການບໍລິຈາກ"><a href="{{ route('activities.index', ['new' => 1]) }}" class="btn-primary btn-sm">ສ້າງກິດຈະກຳ</a></x-empty></div>
+        <div class="card"><x-empty icon="hand-coins" message="ຍັງບໍ່ມີກິດຈະກຳ — ສ້າງກິດຈະກຳກ່ອນ ເພື່ອຕິດຕາມການບໍລິຈາກ"><a href="{{ route('activities.index', ['new' => 1]) }}" class="btn-primary btn-sm">ສ້າງກິດຈະກຳ</a></x-empty></div>
     @else
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" data-stagger>
             <x-stat-card label="ຍອດຄາດຫວັງ" :value="money($t['expected'])" :hint="'ຈາກ '.$t['count'].' ຜູ້ບໍລິຈາກ'" />
             <x-stat-card label="ຊຳລະແລ້ວ" :value="money($t['paid'])" tone="success" :hint="$t['pct'] === null ? '—' : percent($t['pct']).' ຂອງເປົ້າໝາຍ'" />
             <x-stat-card label="ຄ້າງຊຳລະ" :value="money($t['outstanding'])" tone="destructive" :hint="$t['outstanding_people'].' ຄົນຍັງຄ້າງ'" />
@@ -45,7 +45,7 @@
                 </div>
             </form>
             @if ($rows->isEmpty())
-                <x-empty icon="target" :message="$t['count'] ? 'ບໍ່ພົບຜູ້ບໍລິຈາກທີ່ກົງກັບຕົວກອງ' : 'ຍັງບໍ່ມີຜູ້ບໍລິຈາກສຳລັບກິດຈະກຳນີ້'" />
+                <x-empty icon="hand-coins" :message="$t['count'] ? 'ບໍ່ພົບຜູ້ບໍລິຈາກທີ່ກົງກັບຕົວກອງ' : 'ຍັງບໍ່ມີຜູ້ບໍລິຈາກສຳລັບກິດຈະກຳນີ້'" />
             @else
                 <div class="overflow-x-auto">
                     <table class="data-table">
@@ -142,7 +142,7 @@
                     <div class="flex-1 space-y-4 p-5 sm:p-6">
                         <x-field name="amount" label="ຈຳນວນເງິນ (₭)" required><input type="number" name="amount" min="1" step="1" class="input num"></x-field>
                         <x-field name="paid_on" label="ວັນທີຊຳລະ" required><input type="date" name="paid_on" class="input"></x-field>
-                        <x-field name="method" label="ວິທີຊຳລະ"><x-select name="method" :options="\App\Support\Lookups::PAYMENT_METHODS" /></x-field>
+                        <div><label for="edit-method" class="label">ວິທີຊຳລະ</label><x-select name="method" id="edit-method" :options="\App\Support\Lookups::PAYMENT_METHODS" /></div>
                         <x-field name="note" label="ໝາຍເຫດ"><input name="note" maxlength="255" class="input"></x-field>
                     </div>
                     <div class="flex justify-end gap-2 border-t border-border px-5 py-4 sm:px-6"><button type="button" class="btn-outline" data-modal-close>ຍົກເລີກ</button><button class="btn-primary">ບັນທຶກ</button></div>
